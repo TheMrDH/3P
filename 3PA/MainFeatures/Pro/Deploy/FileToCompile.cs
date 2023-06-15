@@ -1,37 +1,40 @@
 ﻿#region header
+
 // ========================================================================
 // Copyright (c) 2018 - Julien Caillon (julien.caillon@gmail.com)
 // This file (FileToCompile.cs) is part of 3P.
-// 
+//
 // 3P is a free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // 3P is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with 3P. If not, see <http://www.gnu.org/licenses/>.
 // ========================================================================
+
 #endregion
+
+using _3PA.Lib;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-using _3PA.Lib;
 
-namespace _3PA.MainFeatures.Pro.Deploy {
-
+namespace _3PA.MainFeatures.Pro.Deploy
+{
     /// <summary>
     /// This class represents a file that needs to be compiled
     /// </summary>
-    internal class FileToCompile {
-
+    internal class FileToCompile
+    {
         /// <summary>
         /// The path to the source that needs to be compiled
         /// </summary>
@@ -39,6 +42,7 @@ namespace _3PA.MainFeatures.Pro.Deploy {
 
         // stores temporary path used during the compilation
         public string CompiledSourcePath { get; set; }
+
         public string CompilationOutputDir { get; set; }
         public string CompOutputR { get; set; }
         public string CompOutputXrf { get; set; }
@@ -84,21 +88,29 @@ namespace _3PA.MainFeatures.Pro.Deploy {
         /// <summary>
         /// Constructor
         /// </summary>
-        public FileToCompile(string sourcePath) : this(sourcePath, -1) {
+        public FileToCompile(string sourcePath) : this(sourcePath, -1)
+        {
         }
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public FileToCompile(string sourcePath, long size) {
+        public FileToCompile(string sourcePath, long size)
+        {
             SourcePath = sourcePath;
             BaseFileName = Path.GetFileNameWithoutExtension(sourcePath);
-            if (size > -1) {
+            if (size > -1)
+            {
                 Size = size;
-            } else {
-                try {
+            }
+            else
+            {
+                try
+                {
                     Size = new FileInfo(sourcePath).Length;
-                } catch (Exception) {
+                }
+                catch (Exception)
+                {
                     Size = 0;
                 }
             }
@@ -107,18 +119,25 @@ namespace _3PA.MainFeatures.Pro.Deploy {
         /// <summary>
         /// File the references used to compile this file (include and tables)
         /// </summary>
-        public void ReadAnalysisResults() {
+        public void ReadAnalysisResults()
+        {
             // read RCodeTableReferenced
-            if (!string.IsNullOrEmpty(CompOutputRefTables)) {
+            if (!string.IsNullOrEmpty(CompOutputRefTables))
+            {
                 RequiredTables = new List<TableCrc>();
-                Utils.ForEachLine(CompOutputRefTables, new byte[0], (i, line) => {
+                Utils.ForEachLine(CompOutputRefTables, new byte[0], (i, line) =>
+                {
                     var split = line.Split('\t');
-                    if (split.Length == 2) {
+                    if (split.Length == 2)
+                    {
                         var crc = split[1].Trim();
                         var qualifiedName = split[0].Trim();
-                        if (!crc.Equals("0")) {
-                            if (!RequiredTables.Exists(tableCrc => tableCrc.QualifiedTableName.EqualsCi(qualifiedName))) {
-                                RequiredTables.Add(new TableCrc {
+                        if (!crc.Equals("0"))
+                        {
+                            if (!RequiredTables.Exists(tableCrc => tableCrc.QualifiedTableName.EqualsCi(qualifiedName)))
+                            {
+                                RequiredTables.Add(new TableCrc
+                                {
                                     QualifiedTableName = qualifiedName,
                                     Crc = crc
                                 });
@@ -130,18 +149,23 @@ namespace _3PA.MainFeatures.Pro.Deploy {
             }
 
             // read RCodeSourceFileUsed
-            if (!string.IsNullOrEmpty(CompOutputFileIdLog)) {
+            if (!string.IsNullOrEmpty(CompOutputFileIdLog))
+            {
                 var compiledSourcePathBaseFileName = Path.GetFileName(CompiledSourcePath);
                 var references = new HashSet<string>();
-                Utils.ForEachLine(CompOutputFileIdLog, new byte[0], (i, line) => {
-                    try {
+                Utils.ForEachLine(CompOutputFileIdLog, new byte[0], (i, line) =>
+                {
+                    try
+                    {
                         // we want to read this kind of line :
                         // [17/04/09@16:44:14.372+0200] P-009532 T-007832 2 4GL FILEID         Open E:\Common\CommonObj.cls ID=33
                         // skip until the 5th space
                         var idx = 0;
                         var nbFoundSpace = 0;
-                        do {
-                            if (line[idx] == ' ') {
+                        do
+                        {
+                            if (line[idx] == ' ')
+                            {
                                 nbFoundSpace++;
                                 if (nbFoundSpace == 5)
                                     break;
@@ -154,7 +178,8 @@ namespace _3PA.MainFeatures.Pro.Deploy {
                             return;
                         idx += 6;
                         // skip all whitespace
-                        while (idx < line.Length) {
+                        while (idx < line.Length)
+                        {
                             if (line[idx] != ' ')
                                 break;
                             idx++;
@@ -165,8 +190,10 @@ namespace _3PA.MainFeatures.Pro.Deploy {
                         idx += 5;
                         // find the last index of a white space
                         var lastIdx = line.Length - 1;
-                        do {
-                            if (line[lastIdx] == ' ') {
+                        do
+                        {
+                            if (line[lastIdx] == ' ')
+                            {
                                 break;
                             }
                             lastIdx--;
@@ -179,10 +206,13 @@ namespace _3PA.MainFeatures.Pro.Deploy {
                             !newFile.EndsWith(".pl", StringComparison.CurrentCultureIgnoreCase) &&
                             !newFile.StartsWith(CompilationOutputDir, StringComparison.CurrentCultureIgnoreCase) &&
                             !Path.GetFileName(newFile).Equals(compiledSourcePathBaseFileName)
-                            ) {
+                            )
+                        {
                             references.Add(newFile);
                         }
-                    } catch (Exception) {
+                    }
+                    catch (Exception)
+                    {
                         // wrong line format
                     }
                 }, Encoding.Default);
@@ -198,7 +228,8 @@ namespace _3PA.MainFeatures.Pro.Deploy {
     /// This class represent the tables that were referenced in a given .r code file
     /// </summary>
     [Serializable]
-    public class TableCrc {
+    public class TableCrc
+    {
         public string QualifiedTableName { get; set; }
         public string Crc { get; set; }
     }
@@ -210,8 +241,8 @@ namespace _3PA.MainFeatures.Pro.Deploy {
     /// <summary>
     /// Errors found for this file, either from compilation or from prolint
     /// </summary>
-    internal class FileError {
-
+    internal class FileError
+    {
         /// <summary>
         /// The path to the file that was compiled to generate this error (you can compile a .p and have the error on a .i)
         /// </summary>
@@ -221,6 +252,7 @@ namespace _3PA.MainFeatures.Pro.Deploy {
         /// Path of the file in which we found the error
         /// </summary>
         public string SourcePath { get; set; }
+
         public ErrorLevel Level { get; set; }
         public int Line { get; set; }
         public int Column { get; set; }
@@ -234,15 +266,18 @@ namespace _3PA.MainFeatures.Pro.Deploy {
         /// </summary>
         public int Times { get; set; }
 
-        public virtual string ToStringDescription() {
+        public virtual string ToStringDescription()
+        {
             var sb = new StringBuilder();
             sb.Append("<div>");
             sb.Append("<img height='15px' src='"); sb.Append(Level > ErrorLevel.StrongWarning ? "Error30x30" : "Warning30x30"); sb.Append("'>");
-            if (!CompiledFilePath.Equals(SourcePath)) {
+            if (!CompiledFilePath.Equals(SourcePath))
+            {
                 sb.Append("in "); sb.Append(SourcePath.ToHtmlLink(Path.GetFileName(SourcePath))); sb.Append(", ");
             }
             sb.Append((SourcePath + "|" + Line).ToHtmlLink("line " + (Line + 1))); sb.Append(" (n°" + ErrorNumber + ")");
-            if (Times > 0) {
+            if (Times > 0)
+            {
                 sb.Append(" (x" + Times + ")");
             }
             sb.Append(" " + Message.EscapeHtml());
@@ -255,7 +290,8 @@ namespace _3PA.MainFeatures.Pro.Deploy {
     /// Describes the error level, the num is also used for MARKERS in scintilla
     /// and thus must start at 0
     /// </summary>
-    internal enum ErrorLevel {
+    internal enum ErrorLevel
+    {
         [Description("Error(s), good!")]
         NoErrors,
 
@@ -276,5 +312,4 @@ namespace _3PA.MainFeatures.Pro.Deploy {
     }
 
     #endregion
-
 }

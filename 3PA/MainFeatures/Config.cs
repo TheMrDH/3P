@@ -294,7 +294,11 @@ namespace _3PA.MainFeatures {
             public bool AutoCompleteNeverAskToDisableDefault = false;
 
             public string AutoCompleteItemPriorityList = "";
-
+            
+            [ConfigAttribute(Label = "Code Snippet File",
+            Tooltip = "Directory to custom code snippet file, will replace default selection",
+            GroupName = "Progress autocompletion")]
+            public string CodeSnippetDir = "";
 
             /// <summary>
             /// NPP AUTOCOMPLETION

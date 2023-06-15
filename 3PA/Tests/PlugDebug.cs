@@ -310,6 +310,11 @@ namespace _3PA.Tests {
             AppendEverything(pars);
         }
 
+        public void Visit(ParsedSnippet pars)
+        {
+            AppendEverything(pars);
+        }
+
         public void Visit(ParsedIncludeFile pars) {
             AppendEverything(pars);
         }

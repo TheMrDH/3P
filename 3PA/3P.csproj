@@ -69,6 +69,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
     <Reference Include="System.Web.Extensions" />
@@ -178,6 +179,7 @@
     <Compile Include="Lib\ProcessIo.cs" />
     <Compile Include="Lib\ProgressCopy.cs" />
     <Compile Include="Lib\RecurentAction.cs" />
+    <Compile Include="MainFeatures\CodeExplorer\ParseResultsObject.cs" />
     <Compile Include="MainFeatures\Parser\Pro\ParsedLineInfo.cs" />
     <Compile Include="MainFeatures\Parser\Pro\ParserError.cs" />
     <Compile Include="MainFeatures\Parser\Pro\Parse\ParserStatementOnEvent.cs" />
@@ -738,8 +740,10 @@
     <None Include="_Resource\Data\KeywordsList" />
     <None Include="_Resource\Data\KeywordsHelp" />
     <None Include="_Resource\Data\ModificationTags" />
+    <None Include="_Resource\Data\ProgressTemplates\BaseSnippets.p" />
     <None Include="_Resource\Data\ProgressTemplates\FunctionImplementation.p" />
     <None Include="_Resource\Data\ProgressTemplates\InternalProcedure.p" />
+    <None Include="_Resource\Data\Progress\DatabaseConnectionCheck.p" />
     <None Include="_Resource\Data\Progress\DeploymentHook.p" />
     <None Include="_Resource\Data\Progress\DumpDatabase.p" />
     <None Include="_Resource\Data\Progress\DumpTableCrc.p" />

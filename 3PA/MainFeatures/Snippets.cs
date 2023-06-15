@@ -1,33 +1,38 @@
 #region header
+
 // ========================================================================
 // Copyright (c) 2018 - Julien Caillon (julien.caillon@gmail.com)
 // This file (Snippets.cs) is part of 3P.
-// 
+//
 // 3P is a free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // 3P is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with 3P. If not, see <http://www.gnu.org/licenses/>.
 // ========================================================================
+
 #endregion
+
+using _3PA.Lib;
+using _3PA.MainFeatures.AutoCompletionFeature;
+using _3PA.NppCore;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using _3PA.Lib;
-using _3PA.MainFeatures.AutoCompletionFeature;
-using _3PA.NppCore;
 
-namespace _3PA.MainFeatures {
-    internal class SnippetContext {
+namespace _3PA.MainFeatures
+{
+    internal class SnippetContext
+    {
         public static int IndicatorId = 8;
         public List<List<Point>> ParametersGroups = new List<List<Point>>();
         public List<Point> Parameters = new List<Point>();
@@ -36,68 +41,84 @@ namespace _3PA.MainFeatures {
         public string ReplacementString = "";
     }
 
-    internal static class Snippets {
+    internal static class Snippets
+    {
         public static SnippetContext LocSnippetContext;
-        static public Dictionary<string, string> Map = new Dictionary<string, string>();
+        public static Dictionary<string, string> Map = new Dictionary<string, string>();
 
-        static public bool InsertionActive {
+        public static bool InsertionActive
+        {
             get { return LocSnippetContext != null; }
         }
 
-        static public IEnumerable<string> Keys {
+        public static IEnumerable<string> Keys
+        {
             get { return Map.Keys; }
         }
 
-        public static bool Contains(string snippetTag) {
-            lock (Map) {
+        public static bool Contains(string snippetTag)
+        {
+            lock (Map)
+            {
                 return (!string.IsNullOrWhiteSpace(snippetTag)) && Map.ContainsKey(snippetTag);
             }
         }
 
-        public static void Init() {}
+        public static void Init()
+        { }
 
-        public static string GetTemplate(string snippetTag) {
-            lock (Map) {
+        public static string GetTemplate(string snippetTag)
+        {
+            lock (Map)
+            {
                 if (Map.ContainsKey(snippetTag))
                     return Map[snippetTag];
                 return null;
             }
         }
 
-        static void Read(string file) {
+        private static void Read(string file)
+        {
             //Debug.Assert(false);
             Map.Clear();
             var buffer = new StringBuilder();
             var currentTag = "";
 
-            Utils.ForEachLine(file, null, (i, line) => {
-                    if (line.EndsWith("=>") && !line.StartsWith(" ")) {
-                        if (currentTag != "") {
-                            Map.Add(currentTag, buffer.ToString().Remove(buffer.ToString().LastIndexOf("\r\n", StringComparison.Ordinal)));
-                            buffer.Clear();
-                        }
+            Utils.ForEachLine(file, null, (i, line) =>
+            {
+                if (line.EndsWith("=>") && !line.StartsWith(" "))
+                {
+                    if (currentTag != "")
+                    {
+                        Map.Add(currentTag, buffer.ToString().Remove(buffer.ToString().LastIndexOf("\r\n", StringComparison.Ordinal)));
+                        buffer.Clear();
+                    }
 
-                        currentTag = line.Replace("=>", "").Trim();
-                    } else
-                        buffer.AppendLine(line);
-                },
+                    currentTag = line.Replace("=>", "").Trim();
+                }
+                else
+                    buffer.AppendLine(line);
+            },
                 Encoding.Default);
 
             if (currentTag != "")
                 Map.Add(currentTag, buffer.ToString().Remove(buffer.ToString().LastIndexOf("\r\n", StringComparison.Ordinal)));
         }
 
-        public static bool TriggerCodeSnippetInsertion() {
+        public static bool TriggerCodeSnippetInsertion()
+        {
             if (InsertionActive) return false; // do no insert a snippet within a snippet!
 
             string token = Sci.GetWord(null, Sci.CurrentPosition);
             var curPos = Sci.CurrentPosition;
             Point tokenPoints = new Point(curPos - token.Length, curPos);
 
-            if (Contains(token)) {
+            if (Contains(token))
+            {
                 string replacement = GetTemplate(token);
 
-                if (replacement != null) {
+                if (replacement != null)
+                {
                     int line = Sci.Line.CurrentLine;
                     int lineStartPos = Sci.GetLine(line).Position;
 
@@ -110,11 +131,13 @@ namespace _3PA.MainFeatures {
                     indic.IndicatorStyle = IndicatorStyle.Box;
                     indic.ForeColor = Color.Blue;
 
-                    foreach (var point in LocSnippetContext.Parameters) {
+                    foreach (var point in LocSnippetContext.Parameters)
+                    {
                         indic.Add(point.X, point.Y);
                     }
 
-                    if (LocSnippetContext.CurrentParameter.HasValue) {
+                    if (LocSnippetContext.CurrentParameter.HasValue)
+                    {
                         Sci.SetSelection(LocSnippetContext.CurrentParameter.Value.X, LocSnippetContext.CurrentParameter.Value.Y);
                         LocSnippetContext.CurrentParameterValue = Sci.GetTextBetween(LocSnippetContext.CurrentParameter.Value);
                     }
@@ -130,7 +153,8 @@ namespace _3PA.MainFeatures {
             return false;
         }
 
-        static public void ReplaceTextAtIndicator(string text, Point indicatorRange) {
+        public static void ReplaceTextAtIndicator(string text, Point indicatorRange)
+        {
             Sci.SetTextByRange(indicatorRange.X, indicatorRange.Y, text);
 
             //restore the indicator
@@ -140,7 +164,8 @@ namespace _3PA.MainFeatures {
             indic.Add(indicatorRange.X, indicatorRange.X + text.Length);
         }
 
-        static public bool NavigateToNextParam() {
+        public static bool NavigateToNextParam()
+        {
             var indic = Sci.GetIndicator(SnippetContext.IndicatorId);
             indic.IndicatorStyle = IndicatorStyle.Box;
             indic.ForeColor = Color.Blue;
@@ -150,31 +175,35 @@ namespace _3PA.MainFeatures {
             if (!indicators.Any())
                 return false;
 
-            if (LocSnippetContext.CurrentParameter != null) {
+            if (LocSnippetContext.CurrentParameter != null)
+            {
                 Point currentParam = LocSnippetContext.CurrentParameter.Value;
                 string currentParamOriginalText = LocSnippetContext.CurrentParameterValue;
 
                 Sci.SetSelection(currentParam.X, currentParam.X);
                 string currentParamDetectedText = Sci.GetWordAtPosition(Sci.CurrentPosition, AutoCompletion.CurrentLangAdditionalChars);
 
-                if (currentParamOriginalText != currentParamDetectedText) {
+                if (currentParamOriginalText != currentParamDetectedText)
+                {
                     //current parameter is modified, indicator is destroyed so restore the indicator first
                     indic.Add(currentParam.X, currentParam.X + currentParamDetectedText.Length);
 
                     indicators = indic.FindRanges().ToArray(); //needs refreshing as the document is modified
 
-                    var paramsInfo = indicators.Select(p => new {
-                            Index = indicators.IndexOf(p),
-                            Text = Sci.GetTextBetween(p),
-                            Range = p,
-                            Pos = p.X
-                        })
+                    var paramsInfo = indicators.Select(p => new
+                    {
+                        Index = indicators.IndexOf(p),
+                        Text = Sci.GetTextBetween(p),
+                        Range = p,
+                        Pos = p.X
+                    })
                         .OrderBy(x => x.Pos)
                         .ToArray();
 
                     var paramsToUpdate = paramsInfo.Where(item => item.Text == currentParamOriginalText).ToArray();
 
-                    foreach (var param in paramsToUpdate) {
+                    foreach (var param in paramsToUpdate)
+                    {
                         ReplaceTextAtIndicator(currentParamDetectedText, indicators[param.Index]);
                         indicators = indic.FindRanges().ToArray(); //needs refreshing as the document is modified
                     }
@@ -189,8 +218,10 @@ namespace _3PA.MainFeatures {
                 prevParamsValues.Add(" ");
                 prevParamsValues.Add("|");
 
-                foreach (var range in indicators.ToArray()) {
-                    if (currentParam.X < range.X && !prevParamsValues.Contains(Sci.GetTextBetween(range))) {
+                foreach (var range in indicators.ToArray())
+                {
+                    if (currentParam.X < range.X && !prevParamsValues.Contains(Sci.GetTextBetween(range)))
+                    {
                         nextParameter = range;
                         break;
                     }
@@ -201,7 +232,8 @@ namespace _3PA.MainFeatures {
 
                 LocSnippetContext.CurrentParameter = nextParameter;
             }
-            if (LocSnippetContext.CurrentParameter.HasValue) {
+            if (LocSnippetContext.CurrentParameter.HasValue)
+            {
                 Sci.SetSelection(LocSnippetContext.CurrentParameter.Value.X, LocSnippetContext.CurrentParameter.Value.Y);
                 LocSnippetContext.CurrentParameterValue = Sci.GetTextBetween(LocSnippetContext.CurrentParameter.Value);
             }
@@ -209,20 +241,23 @@ namespace _3PA.MainFeatures {
             return true;
         }
 
-        static public void FinalizeCurrent() {
+        public static void FinalizeCurrent()
+        {
             var indic = Sci.GetIndicator(SnippetContext.IndicatorId);
             var indicators = indic.FindRanges().ToArray();
 
             foreach (var range in indicators)
                 indic.Clear(range.X, range.Y);
 
-            var caretPoint = indicators.Where(point => {
-                    string text = Sci.GetTextBetween(point);
-                    return text == " " || text == "|";
-                })
+            var caretPoint = indicators.Where(point =>
+            {
+                string text = Sci.GetTextBetween(point);
+                return text == " " || text == "|";
+            })
                 .FirstOrDefault();
 
-            if (caretPoint.X != caretPoint.Y) {
+            if (caretPoint.X != caretPoint.Y)
+            {
                 Sci.SetTextByRange(caretPoint.X, caretPoint.Y, "");
                 Sci.SetSelection(caretPoint.X, caretPoint.X);
             }
@@ -230,7 +265,8 @@ namespace _3PA.MainFeatures {
             LocSnippetContext = null;
         }
 
-        public static void PrepareForIncertion(string rawText, int charsOffset, int documentOffset = 0) {
+        public static void PrepareForIncertion(string rawText, int charsOffset, int documentOffset = 0)
+        {
             LocSnippetContext = new SnippetContext();
 
             LocSnippetContext.ReplacementString = rawText;
@@ -241,10 +277,12 @@ namespace _3PA.MainFeatures {
             int endPos;
             int startPos = LocSnippetContext.ReplacementString.IndexOf("$", StringComparison.Ordinal);
 
-            while (startPos != -1) {
+            while (startPos != -1)
+            {
                 endPos = LocSnippetContext.ReplacementString.IndexOf("$", startPos + 1, StringComparison.Ordinal);
 
-                if (endPos != -1) {
+                if (endPos != -1)
+                {
                     //'$item$' -> 'item'
                     int newEndPos = endPos - 2;
 
@@ -257,7 +295,8 @@ namespace _3PA.MainFeatures {
                     LocSnippetContext.ReplacementString = leftText + placementValue + rightText;
 
                     endPos = newEndPos;
-                } else
+                }
+                else
                     break;
 
                 startPos = LocSnippetContext.ReplacementString.IndexOf("$", endPos + 1, StringComparison.Ordinal);
@@ -269,7 +308,8 @@ namespace _3PA.MainFeatures {
                 LocSnippetContext.CurrentParameter = LocSnippetContext.Parameters.FirstOrDefault();
         }
 
-        static public void EditSnippetsConfig() {
+        public static void EditSnippetsConfig()
+        {
             Npp.OpenFile(Config.FileSnippets);
         }
     }

@@ -36,18 +36,20 @@ using _3PA.MainFeatures.SyntaxHighlighting;
 using _3PA.NppCore;
 using _3PA.NppCore.NppInterfaceForm;
 using _3PA._Resource;
+using _3PA.MainFeatures.Pro.Deploy;
+using System.Threading;
+using _3PA.MainFeatures.AutoCompletionFeature;
 
 namespace _3PA.MainFeatures.FileExplorer {
     internal partial class FileExplorerForm : NppDockableDialogForm {
         #region Private
 
         private string[] _explorerDirStr;
-
         // remember the list that was passed to the autocomplete form when we set the items, we need this
         // because we reorder the list each time the user filters stuff, but we need the original order
         private List<FileListItem> _initialObjectsList;
         private bool _isExpanded = true;
-
+        public System.Windows.Forms.ContextMenu ContextMenu { get; set; }
         /// <summary>
         /// Use this to change the image of the refresh button to let the user know the tree is being refreshed
         /// </summary>
@@ -105,6 +107,10 @@ namespace _3PA.MainFeatures.FileExplorer {
             btEnvList.BackGrndImage = ImageResources.Env;
             btEnvList.ButtonPressed += BtEnvListOnButtonPressed;
             toolTipHtml.SetToolTip(btEnvList, "Click to <b>open a menu</b> that allows you to quickly select another environment");
+
+            btPingServer.BackGrndImage = ImageResources.Database;
+            btPingServer.ButtonPressed += BtPingServerOnButtonPressed;
+            toolTipHtml.SetToolTip(btPingServer, "Click to <b>ping environment server</b> to check server connection");
 
             btEnvModify.BackGrndImage = ImageResources.ZoomIn;
             btEnvModify.ButtonPressed += BtEnvModifyOnButtonPressed;
@@ -165,8 +171,8 @@ namespace _3PA.MainFeatures.FileExplorer {
                     ToolTip = "Toggle <b>Expand/Collapse</b>"
                 }
             };
-            filterbox.Initialize(yamuiList);
 
+            filterbox.Initialize(yamuiList);
             yamuiList.EmptyListString = @"No files!";
             yamuiList.ShowTreeBranches = Config.Instance.ShowTreeBranches;
 
@@ -262,10 +268,9 @@ namespace _3PA.MainFeatures.FileExplorer {
                     }
                     break;
             }
-
             // apply custom sorting
             _initialObjectsList.Sort(FileSortingClass<FileListItem>.Instance);
-
+            
             try {
                 yamuiList.SetItems(_initialObjectsList.Cast<ListItem>().ToList());
             } catch (Exception e) {
@@ -284,16 +289,112 @@ namespace _3PA.MainFeatures.FileExplorer {
             Utils.OpenAnyLink(curItem.FullPath);
         }
 
-        private void YamuiListOnRowClicked(YamuiScrollList yamuiScrollList, MouseEventArgs e) {
-            var curItem = (FileListItem) yamuiList.SelectedItem;
-            if (curItem == null)
-                return;
+        private void OnExecCompilationOk(MultiCompilation proc, List<FileToCompile> fileToCompiles, List<FileToDeploy> filesToDeploy)
+        {
 
-            if (e.Button == MouseButtons.Right) {
-                if (File.Exists(curItem.FullPath))
-                    Utils.OpenFileInFolder(curItem.FullPath);
+            FileDeployedCompiled fileDeployedCompiled = new FileDeployedCompiled();
+            string fileName = fileToCompiles.First().SourcePath.Substring(0, fileToCompiles.First().SourcePath.Length - (fileToCompiles.First().BaseFileName.Length + 2));
+            UserCommunication.NotifyUnique("", "<div style='padding-bottom: 5px;'>File Explorer Compile:</div>" + ProExecutionCompile.FormatCompilationResultForFolder(fileName, fileToCompiles, filesToDeploy), MessageImg.MsgOk, "Compiled Folder", fileName, null);
+
+
+            this._currentOperation = -1;
+
+        }
+
+        public void FileExplorerCompile(object sender, EventArgs e) 
+        {
+
+            System.Windows.Forms.MenuItem contextMenu = (System.Windows.Forms.MenuItem)sender;
+            int action = 0;
+            var curItem = (FileListItem)yamuiList.SelectedItem;
+            string fileName = curItem.FullPath.Split('\\')[curItem.FullPath.Split('\\').Length - 1];
+            if ( contextMenu.Name.Equals("OpenExplorer"))
+            {
+                if(File.GetAttributes(curItem.FullPath) == FileAttributes.Directory)
+                {
+                    Utils.OpenFolder(curItem.FullPath);
+                }
+                Utils.OpenFileInFolder(curItem.FullPath);
+            }
+            else
+            {
+                if (File.GetAttributes(curItem.FullPath) == FileAttributes.Directory)
+                {
+                    action = 2;
+                }
                 else
-                    Utils.OpenAnyLink(curItem.FullPath);
+                {
+                    action = 1;
+
+                }
+            }
+            if(action == 1)
+            {
+                Pro.Deploy.FileToCompile g = new Pro.Deploy.FileToCompile(curItem.FullPath, curItem.Size);
+                List<Pro.Deploy.FileToCompile> fileToCompiles = new List<Pro.Deploy.FileToCompile>();
+                fileToCompiles.Add(g);
+                ProMisc.StartProgressManualComp(ExecutionType.Compile, fileToCompiles);
+                UserCommunication.NotifyUnique("", "<div style='padding-bottom: 5px;'>File Explorer Compile:</div>" + ProExecutionCompile.FormatCompilationResultForSingleFile(g.SourcePath, g, null), MessageImg.MsgOk, "Compiling File", fileName, null, 10);
+            }else if(action == 2)
+            {
+                MainFeatures.Pro.Deploy.MultiCompilation proExecutionCompile = new Pro.Deploy.MultiCompilation(ProEnvironment.Current);
+                List<Pro.Deploy.FileToCompile> fileToCompiles = new List<Pro.Deploy.FileToCompile>();
+
+                string[] files = System.IO.Directory.GetFiles(curItem.FullPath, "*.*").Where(f => f.Contains(".p") || f.Contains(".w")).ToArray();
+                Npp.NppFileInfo fileInfo = new Npp.NppFileInfo();
+
+                foreach (string s in files)
+                {
+                    fileInfo.Path = s;
+                    if (fileInfo.IsCompilable && fileInfo.IsProgress)
+                    {
+                        Pro.Deploy.FileToCompile g = new Pro.Deploy.FileToCompile(s, curItem.Size);
+                        fileToCompiles.Add(g);
+                    }
+
+                }
+                proExecutionCompile.CompileFiles(fileToCompiles);
+                proExecutionCompile.OnCompilationOk += OnExecCompilationOk;
+                fileName = fileToCompiles.First().SourcePath.Substring(0, fileToCompiles.First().SourcePath.Length - (fileToCompiles.First().BaseFileName.Length + 2));
+                UserCommunication.NotifyUnique("", "<div style='padding-bottom: 5px;'>File Explorer Compile:</div>" + ProExecutionCompile.FormatCompilationResultForFolder(fileName, fileToCompiles, null), MessageImg.MsgOk, "Compiling Folder", fileName, null);
+            }
+        }
+
+        public void FormExplorerPopup(object sender, EventArgs e)
+        {
+            System.Windows.Forms.ContextMenu contextMenu = (System.Windows.Forms.ContextMenu)sender;
+            var curItem = (FileListItem)yamuiList.SelectedItem;
+            if(curItem != null)
+            {
+                string fileName = curItem.FullPath.Split('\\')[curItem.FullPath.Split('\\').Length - 1];
+                contextMenu.MenuItems[1].Text = "Compile " + fileName;
+
+            }
+        }
+
+        private void YamuiListOnMouseHover(object yamuiScrollList, EventArgs e)
+        {
+            var curItem = (FileListItem)yamuiList.SelectedItem;
+
+
+            if (curItem == null)
+            {
+                return;
+            }
+            curItem.DisplayText = curItem.FullPath;
+        }
+
+        private void YamuiListOnRowClicked(YamuiScrollList yamuiScrollList, MouseEventArgs e) {
+            var curItem = (FileListItem)yamuiList.SelectedItem;
+
+
+            if (curItem == null)
+            {
+                return;
+            }
+                
+            if (e.Button == MouseButtons.Right) {
+                ContextMenu.Show(yamuiScrollList, yamuiScrollList.PointToClient(MousePosition)); //Figure out why context menu is not appearing at mouse.
             } else if (e.Clicks >= 2)
                 Utils.OpenAnyLink(curItem.FullPath);
         }
@@ -468,6 +569,55 @@ namespace _3PA.MainFeatures.FileExplorer {
 
         private void BtEnvListOnButtonPressed(object sender, EventArgs eventArgs) {
             AppliMenu.ShowEnvMenu(true);
+        }
+
+        private void BtPingServerOnButtonPressed(object sender, EventArgs eventArgs)
+        {
+
+
+            string output = "";
+            List<string> dbList = new List<string>();
+            
+            Pro.ProEnvironment.Current.ConnectionString.Split('-').ToList().ForEach(o => {
+                
+                if (o.Contains("db")) 
+                {
+                    output += "<div>";
+                    output += o.Replace("db ", "");
+                    dbList.Add(o.Replace("db ", "").Trim());
+                }
+                if (o.Contains("H"))
+                {
+                    output += o.Replace("H ", " -").Trim();
+                    output += "</div>";
+                }
+
+                else if (o.Contains(".pf"))
+                {
+                    StreamReader streamReader = new StreamReader(o);
+                    var m = streamReader.ReadToEnd().Split('-').ToList();
+                    foreach(var n in m)
+                    {
+                        
+                        if (n.Contains("db"))
+                        {
+                            output += "<div>";
+                            output += n.Replace("db ", "");
+                            dbList.Add(n.Replace("db ", "").Trim());
+                        }
+                        if (n.Contains("H"))
+                        {
+                            output += n.Replace("H ", " -").Trim();
+                            output += "</div>";
+                        }
+                        
+                    }
+                }
+
+            });
+            DataBase.Instance.PingCurrentDb(null, "", String.Join(",",dbList));
+            UserCommunication.Notify("<div>" + DataBase.Instance.GetCurrentDumpPath + " Test: " + output + "</div>");
+            
         }
 
         #endregion

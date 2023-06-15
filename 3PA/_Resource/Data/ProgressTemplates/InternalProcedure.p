@@ -1,4 +1,4 @@
-PROCEDURE {&name}{&private}:
+PROCEDURE {&name}{&private}: //{&name} Start
 /*------------------------------------------------------------------------------
   Summary    :     
   Parameters : <none>
@@ -10,4 +10,4 @@ PROCEDURE {&name}{&private}:
 
     RETURN "".
 
-END PROCEDURE.
+END PROCEDURE. //{&name} End

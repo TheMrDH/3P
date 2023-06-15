@@ -43,6 +43,7 @@ namespace _3PA.MainFeatures.FileExplorer {
             this.yamuiLabel2 = new YamuiFramework.Controls.YamuiLabel();
             this.lblEnv = new YamuiFramework.Controls.YamuiLabel();
             this.btEnvList = new YamuiFramework.Controls.YamuiButtonImage();
+            this.btPingServer = new YamuiFramework.Controls.YamuiButtonImage();
             this.btEnvModify = new YamuiFramework.Controls.YamuiButtonImage();
             this.btStopExecution = new YamuiFramework.Controls.YamuiButtonImage();
             this.btBringProcessToFront = new YamuiFramework.Controls.YamuiButtonImage();
@@ -274,6 +275,21 @@ namespace _3PA.MainFeatures.FileExplorer {
             this.btEnvModify.TabIndex = 40;
             this.btEnvModify.Text = "yamuiImageButton1";
             // 
+            // btPingServer
+            // 
+            this.btPingServer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btPingServer.BackGrndImage = null;
+            this.btPingServer.GreyScaleBackGrndImage = null;
+            this.btPingServer.IsFocused = false;
+            this.btPingServer.IsHovered = false;
+            this.btPingServer.IsPressed = false;
+            this.btPingServer.Location = new System.Drawing.Point(299, 69);
+            this.btPingServer.Name = "btPingServer";
+            this.btPingServer.SetImgSize = new System.Drawing.Size(0, 0);
+            this.btPingServer.Size = new System.Drawing.Size(20, 20);
+            this.btPingServer.TabIndex = 45;
+            this.btPingServer.Text = "yamuiImageButton1";
+            // 
             // btStopExecution
             // 
             this.btStopExecution.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -338,6 +354,7 @@ namespace _3PA.MainFeatures.FileExplorer {
             this.Controls.Add(this.btStopExecution);
             this.Controls.Add(this.btEnvModify);
             this.Controls.Add(this.btEnvList);
+            this.Controls.Add(this.btPingServer);
             this.Controls.Add(this.lblEnv);
             this.Controls.Add(this.yamuiLabel2);
             this.Controls.Add(this.btGotoDir);
@@ -377,6 +394,7 @@ namespace _3PA.MainFeatures.FileExplorer {
         private YamuiLabel yamuiLabel2;
         private YamuiLabel lblEnv;
         private YamuiButtonImage btEnvList;
+        private YamuiButtonImage btPingServer;
         private YamuiButtonImage btEnvModify;
         private YamuiButtonImage btStopExecution;
         private YamuiButtonImage btBringProcessToFront;

@@ -249,6 +249,11 @@ namespace _3PA.NppCore {
                                 Plug.OnNppFileBeforeClose();
                                 return;
 
+                            case (uint)NppNotif.NPPN_FILECLOSED:
+                                // on file closed
+                                Plug.OnNppFileClose();
+                                return;
+
                             case (uint) NppNotif.NPPN_LANGCHANGED:
                                 // on lang type changed
                                 Plug.OnLangChanged();

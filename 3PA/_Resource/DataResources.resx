@@ -121,6 +121,12 @@
   <data name="ApplicationThemes" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>data\applicationthemes;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="BaseSnippets" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Data\ProgressTemplates\BaseSnippets.p;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="DatabaseConnectionCheck" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Data\Progress\DatabaseConnectionCheck.p;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="DeploymentHook" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>data\progress\deploymenthook.p;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>

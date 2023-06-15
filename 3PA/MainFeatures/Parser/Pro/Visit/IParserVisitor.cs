@@ -40,5 +40,6 @@ namespace _3PA.MainFeatures.Parser.Pro.Visit {
         void Visit(ParsedEvent pars);
         void PostVisit();
         void Visit(ParsedUsedPreProcVariable pars);
+        void Visit(ParsedSnippet parsedSnippet);
     }
 }

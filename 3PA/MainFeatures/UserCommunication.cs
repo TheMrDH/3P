@@ -37,6 +37,7 @@ namespace _3PA.MainFeatures {
         /// Allows to keep track of opened notifications (when its ID is set)
         /// </summary>
         private static Dictionary<string, YamuiNotification> _registeredNotif = new Dictionary<string, YamuiNotification>(StringComparer.CurrentCultureIgnoreCase);
+        private static Dictionary<string, YamuiInput> _registeredMessage = new Dictionary<string, YamuiInput>(StringComparer.CurrentCultureIgnoreCase);
 
         #endregion
 
@@ -91,7 +92,28 @@ namespace _3PA.MainFeatures {
                 _registeredNotif.Remove(id);
             }
         }
-
+        /// <summary>
+        /// Closes the notification represented by the given id
+        /// </summary>
+        public static void CloseUniqueMessage(string id)
+        {
+            if (_registeredMessage.ContainsKey(id))
+            {
+                try
+                {
+                    if (_registeredMessage[id] != null)
+                    {
+                        _registeredMessage[id].Close();
+                        _registeredMessage[id].Dispose();
+                    }
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+                _registeredMessage.Remove(id);
+            }
+        }
         /// <summary>
         /// Displays a notification on the bottom right of the screen
         /// </summary>
@@ -185,19 +207,28 @@ namespace _3PA.MainFeatures {
             return Message(ref nullObject, htmlContent, imageType, title, subTitle, buttonsList, waitResponse, clickHandler);
         }
 
-        private static int Message(ref object data, string htmlContent, MessageImg imageType, string title, string subTitle, List<string> buttonsList = null, bool waitResponse = true, Action<HtmlLinkClickedEventArgs> clickHandler = null, int minWidth = 450) {
+        public static int Message(string id, string htmlContent, MessageImg imageType, string title, string subTitle, List<string> buttonsList = null, bool waitResponse = true, Action<HtmlLinkClickedEventArgs> clickHandler = null)
+        {
+            object nullObject = null;
+            return Message(ref nullObject, htmlContent, imageType, title, subTitle, buttonsList, waitResponse, clickHandler, 450, id);
+        }
+
+        private static int Message(ref object data, string htmlContent, MessageImg imageType, string title, string subTitle, List<string> buttonsList = null, bool waitResponse = true, Action<HtmlLinkClickedEventArgs> clickHandler = null, int minWidth = 450, string id = "") {
             var clickedButton = -1;
             if (buttonsList == null)
                 buttonsList = new List<string> {"Ok", "Cancel"};
 
             if (waitResponse && data != null) {
-                clickedButton = YamuiInput.ShowDialog(
-                    Npp.Handle,
+                if(id != "")
+                {
+                    if(!_registeredMessage.ContainsKey(id))
+                    _registeredMessage.Add( id , YamuiInput.BuildMsg( Npp.Handle,
                     "3P: " + title,
                     HtmlHelper.FormatTitle(imageType, title, subTitle),
                     HtmlHelper.FormatContent(htmlContent),
                     buttonsList,
                     ref data,
+                    ref clickedButton,
                     Npp.NppScreen.WorkingArea.Width * 3 / 5,
                     Npp.NppScreen.WorkingArea.Height * 9 / 10,
                     minWidth,
@@ -206,48 +237,122 @@ namespace _3PA.MainFeatures {
                             clickHandler(args);
                         else
                             Utils.OpenPathClickHandler(sender, args);
-                    });
-            } else if (waitResponse) {
-                UiThread.Invoke(() => {
-                    object nullObject = null;
+                    }));
+                }
+                else
+                {
                     clickedButton = YamuiInput.ShowDialog(
-                        Npp.Handle,
-                        "3P: " + title,
-                        HtmlHelper.FormatTitle(imageType, title, subTitle),
-                        HtmlHelper.FormatContent(htmlContent),
-                        buttonsList,
-                        ref nullObject,
-                        Npp.NppScreen.WorkingArea.Width * 3 / 5,
-                        Npp.NppScreen.WorkingArea.Height * 9 / 10,
-                        minWidth,
-                        (sender, args) => {
-                            if (clickHandler != null)
-                                clickHandler(args);
-                            else
-                                Utils.OpenPathClickHandler(sender, args);
-                        });
-                });
+                   Npp.Handle,
+                   "3P: " + title,
+                   HtmlHelper.FormatTitle(imageType, title, subTitle),
+                   HtmlHelper.FormatContent(htmlContent),
+                   buttonsList,
+                   ref data,
+                   Npp.NppScreen.WorkingArea.Width * 3 / 5,
+                   Npp.NppScreen.WorkingArea.Height * 9 / 10,
+                   minWidth,
+                   (sender, args) => {
+                       if (clickHandler != null)
+                           clickHandler(args);
+                       else
+                           Utils.OpenPathClickHandler(sender, args);
+                   });
+                }
+               
+            } else if (waitResponse) {
+                if (id != "")
+                {
+                    if (!_registeredMessage.ContainsKey(id))
+                        _registeredMessage.Add(id, YamuiInput.BuildMsg(Npp.Handle,
+                    "3P: " + title,
+                    HtmlHelper.FormatTitle(imageType, title, subTitle),
+                    HtmlHelper.FormatContent(htmlContent),
+                    buttonsList,
+                    ref data,
+                    ref clickedButton,
+                    Npp.NppScreen.WorkingArea.Width * 3 / 5,
+                    Npp.NppScreen.WorkingArea.Height * 9 / 10,
+                    minWidth,
+                    (sender, args) =>
+                    {
+                        if (clickHandler != null)
+                            clickHandler(args);
+                        else
+                            Utils.OpenPathClickHandler(sender, args);
+                    }));
+                }
+                else
+                {
+                    UiThread.Invoke(() =>
+                    {
+                        object nullObject = null;
+                        clickedButton = YamuiInput.ShowDialog(
+                            Npp.Handle,
+                            "3P: " + title,
+                            HtmlHelper.FormatTitle(imageType, title, subTitle),
+                            HtmlHelper.FormatContent(htmlContent),
+                            buttonsList,
+                            ref nullObject,
+                            Npp.NppScreen.WorkingArea.Width * 3 / 5,
+                            Npp.NppScreen.WorkingArea.Height * 9 / 10,
+                            minWidth,
+                            (sender, args) =>
+                            {
+                                if (clickHandler != null)
+                                    clickHandler(args);
+                                else
+                                    Utils.OpenPathClickHandler(sender, args);
+                            });
+
+                    });
+                }
             } else {
                 UiThread.BeginInvoke(() => {
                     YamuiInput form;
                     object nullObject = null;
-                    clickedButton = YamuiInput.Show(
-                        Npp.Handle,
+                    if (id != "")
+                    {
+                        if (!_registeredMessage.ContainsKey(id))
+                            _registeredMessage.Add(id, YamuiInput.BuildMsg(Npp.Handle,
                         "3P: " + title,
                         HtmlHelper.FormatTitle(imageType, title, subTitle),
                         HtmlHelper.FormatContent(htmlContent),
                         buttonsList,
                         ref nullObject,
-                        out form,
+                        ref clickedButton,
                         Npp.NppScreen.WorkingArea.Width * 3 / 5,
                         Npp.NppScreen.WorkingArea.Height * 9 / 10,
                         minWidth,
-                        (sender, args) => {
+                        (sender, args) =>
+                        {
                             if (clickHandler != null)
                                 clickHandler(args);
                             else
                                 Utils.OpenPathClickHandler(sender, args);
-                        });
+                        }));
+                        form = _registeredMessage[id];
+                    }
+                    else
+                    {
+                        clickedButton = YamuiInput.Show(
+                            Npp.Handle,
+                            "3P: " + title,
+                            HtmlHelper.FormatTitle(imageType, title, subTitle),
+                            HtmlHelper.FormatContent(htmlContent),
+                            buttonsList,
+                            ref nullObject,
+                            out form,
+                            Npp.NppScreen.WorkingArea.Width * 3 / 5,
+                            Npp.NppScreen.WorkingArea.Height * 9 / 10,
+                            minWidth,
+                            (sender, args) =>
+                            {
+                                if (clickHandler != null)
+                                    clickHandler(args);
+                                else
+                                    Utils.OpenPathClickHandler(sender, args);
+                            });
+                    }
                     _openedMessage.Add(form);
                 });
             }

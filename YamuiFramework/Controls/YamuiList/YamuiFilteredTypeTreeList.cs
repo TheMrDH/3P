@@ -26,7 +26,8 @@ using System.Linq;
 using System.Windows.Forms;
 using YamuiFramework.Themes;
 
-namespace YamuiFramework.Controls.YamuiList {
+namespace YamuiFramework.Controls.YamuiList
+{
     /// <summary>
     /// This class is the most complicated, obviously
     /// The difficulty being handling the filter string correctly;
@@ -460,6 +461,10 @@ namespace YamuiFramework.Controls.YamuiList {
         protected override void OnRowMouseMove(object sender, MouseEventArgs args) {
             ((YamuiListRow) sender).Invalidate(); // force to redraw on mouse move
             base.OnRowMouseMove(sender, args);
+        }
+
+        protected override void OnRowMouseHover(object sender, EventArgs args)
+        {
         }
 
         /// <summary>

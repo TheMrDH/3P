@@ -47,6 +47,11 @@ namespace _3PA.NppCore {
             get { return _currentFile ?? (_currentFile = new NppFileInfo()); }
         }
 
+        public static NppFileInfo SpecificFileInfo
+        {
+            get { return _currentFile ?? (_currentFile = new NppFileInfo()); }
+        }
+
         /// <summary>
         /// We don't want to recompute those values all the time so we store them when the buffer (document) changes
         /// </summary>

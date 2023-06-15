@@ -215,7 +215,6 @@ namespace YamuiFramework.Controls.YamuiList {
             using (var g = Graphics.FromImage(gImg)) {
                 _itemsNbLabelWidth = TextRenderer.MeasureText(g, _nbItems + PaintItemsText, FontManager.GetFont(FontFunction.Small), ClientSize, TextRightFlags).Width.ClampMin(MinItemLabelWidth);
             }
-
             // set the type buttons needed
             if (_typeListLock.TryEnterWriteLock(-1)) {
                 try {
@@ -224,7 +223,6 @@ namespace YamuiFramework.Controls.YamuiList {
                     _typeListLock.ExitWriteLock();
                 }
             }
-
             base.SetItems(listItems);
         }
 
@@ -355,7 +353,6 @@ namespace YamuiFramework.Controls.YamuiList {
                 YamuiThemeManager.Current.MenuBg(false, false, !item.IsDisabled) :
                 YamuiThemeManager.Current.MenuBg(row.IsSelected, row.IsHovered, !item.IsDisabled);
             e.Graphics.Clear(backColor);
-
             var curItem = item as FilteredTypeListItem;
             if (curItem != null) {
                 var drawRect = row.ClientRectangle;

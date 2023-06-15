@@ -1,28 +1,26 @@
 #region header
+
 // ========================================================================
 // Copyright (c) 2018 - Julien Caillon (julien.caillon@gmail.com)
 // This file (Plug.cs) is part of 3P.
-// 
+//
 // 3P is a free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // 3P is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with 3P. If not, see <http://www.gnu.org/licenses/>.
 // ========================================================================
+
 #endregion
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using YamuiFramework.Helper;
+
+using _3PA._Resource;
 using _3PA.Lib;
 using _3PA.MainFeatures;
 using _3PA.MainFeatures.Appli;
@@ -37,11 +35,16 @@ using _3PA.MainFeatures.Pro.Deploy;
 using _3PA.MainFeatures.SyntaxHighlighting;
 using _3PA.NppCore;
 using _3PA.WindowsCore;
-using _3PA._Resource;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using YamuiFramework.Helper;
 using MenuItem = _3PA.MainFeatures.MenuItem;
 
-namespace _3PA {
-
+namespace _3PA
+{
     /// <summary>
     /// The entry points for this plugin are the following :<br></br>
     /// - Main (through UnmanagedExports)<br></br>
@@ -49,8 +52,8 @@ namespace _3PA {
     /// - OnMouseMessage<br></br>
     /// - OnKeyDown<br></br>
     /// </summary>
-    internal static class Plug {
-
+    internal static class Plug
+    {
         #region events
 
         /// <summary>
@@ -93,7 +96,8 @@ namespace _3PA {
         /// <summary>
         /// Called by notepad++ when the plugin is loaded
         /// </summary>
-        internal static void DoPlugLoad() {
+        internal static void DoPlugLoad()
+        {
             // Triggered when the resolution of an assembly fails, gives us the opportunity to feed the required assembly
             AppDomain.CurrentDomain.AssemblyResolve += LibLoader.AssemblyResolver;
 
@@ -101,11 +105,11 @@ namespace _3PA {
             // Add the event handler for handling UI thread exceptions to the event.
             Application.ThreadException += ErrorHandler.ThreadErrorHandler;
 
-            // Set the unhandled exception mode to force all Windows Forms 
+            // Set the unhandled exception mode to force all Windows Forms
             // errors to go through our handler.
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
 
-            // Add the event handler for handling non-UI thread exceptions to the event. 
+            // Add the event handler for handling non-UI thread exceptions to the event.
             AppDomain.CurrentDomain.UnhandledException += ErrorHandler.UnhandledErrorHandler;
 
             TaskScheduler.UnobservedTaskException += ErrorHandler.UnobservedErrorHandler;
@@ -116,7 +120,8 @@ namespace _3PA {
         /// We can call UnmanagedExports.NppFuncItems.RefreshItems(); later on if we had stuff
         /// in the plugin menu via Npp.SetCommand
         /// </summary>
-        internal static void DoFuncItemsNeeded() {
+        internal static void DoFuncItemsNeeded()
+        {
             var cmdIndex = 0;
             AppliMenu.MainMenuCommandIndex = cmdIndex;
             Npp.SetCommand(cmdIndex++, "Show main menu  [Ctrl + Right click]", () => AppliMenu.ShowMainMenu(true));
@@ -129,7 +134,8 @@ namespace _3PA {
         /// <summary>
         /// Called when the plugin can set new shorcuts to the toolbar in notepad++
         /// </summary>
-        internal static void DoNppNeedToolbarImages() {
+        internal static void DoNppNeedToolbarImages()
+        {
             Npp.SetToolbarImage(ImageResources.Logo16x16, AppliMenu.MainMenuCommandIndex);
             Npp.SetToolbarImage(ImageResources.FileExplorer16x16, FileExplorer.Instance.DockableCommandIndex);
             Npp.SetToolbarImage(ImageResources.CodeExplorer16x16, CodeExplorer.Instance.DockableCommandIndex);
@@ -138,33 +144,44 @@ namespace _3PA {
         /// <summary>
         /// Called on npp ready
         /// </summary>
-        internal static bool DoNppReady() {
-            try {
+        internal static bool DoNppReady()
+        {
+            try
+            {
                 // need to set some values in the yamuiThemeManager
                 ThemeManager.OnStartUp();
 
                 // code explorer
-                if (Config.Instance.CodeExplorerAutoHideOnNonProgressFile) {
+                if (Config.Instance.CodeExplorerAutoHideOnNonProgressFile)
+                {
                     CodeExplorer.Instance.Toggle(Npp.NppFileInfo.GetFullPathApi.TestAgainstListOfPatterns(Config.Instance.FilesPatternProgress));
-                } else if (Config.Instance.CodeExplorerVisible) {
+                }
+                else if (Config.Instance.CodeExplorerVisible)
+                {
                     CodeExplorer.Instance.Toggle();
                 }
 
                 // File explorer
-                if (Config.Instance.FileExplorerAutoHideOnNonProgressFile) {
+                if (Config.Instance.FileExplorerAutoHideOnNonProgressFile)
+                {
                     FileExplorer.Instance.Toggle(Npp.NppFileInfo.GetFullPathApi.TestAgainstListOfPatterns(Config.Instance.FilesPatternProgress));
-                } else if (Config.Instance.FileExplorerVisible) {
+                }
+                else if (Config.Instance.FileExplorerVisible)
+                {
                     FileExplorer.Instance.Toggle();
                 }
 
                 return true;
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ErrorHandler.ShowErrors(e, "Plugin startup");
             }
             return false;
         }
 
-        internal static void DoPlugStart() {
+        internal static void DoPlugStart()
+        {
             if (OnPlugReady != null)
                 OnPlugReady();
 
@@ -194,26 +211,33 @@ namespace _3PA {
             //Snippets.Init();
             FileCustomInfo.Import();
 
-            DelayedAction.StartNew(100, () => {
-                if (Config.Instance.InstallStep == 0) {
+            DelayedAction.StartNew(100, () =>
+            {
+                if (Config.Instance.InstallStep == 0)
+                {
                     Config.Instance.InstallStep++;
 
                     // we are at the first notepad++ start
                     Npp.ConfXml.FinishPluginInstall(); // will apply npp options and restart npp
                     return;
                 }
-                if (Config.Instance.InstallStep == 1) {
+                if (Config.Instance.InstallStep == 1)
+                {
                     Config.Instance.InstallStep++;
 
                     // global options applied, we are at the second startup
-                    UserCommunication.NotifyUnique("welcome", "Thank you for installing 3P, you are awesome!<br><br>If this is your first look at 3P you should probably read the <b>getting started</b> section of the home page by clicking " + "go".ToHtmlLink("on this link right here") + ".<br><br><div align='right'>And as always... Enjoy!</div>", MessageImg.MsgInfo, "Fresh install", "Hello and welcome aboard!", args => {
+                    UserCommunication.NotifyUnique("welcome", "Thank you for installing 3P, you are awesome!<br><br>If this is your first look at 3P you should probably read the <b>getting started</b> section of the home page by clicking " + "go".ToHtmlLink("on this link right here") + ".<br><br><div align='right'>And as always... Enjoy!</div>", MessageImg.MsgInfo, "Fresh install", "Hello and welcome aboard!", args =>
+                    {
                         Appli.ToggleView();
                         UserCommunication.CloseUniqueNotif("welcome");
                         args.Handled = true;
                     });
-                } else if (!Config.Instance.NppStoppedCorrectly) {
+                }
+                else if (!Config.Instance.NppStoppedCorrectly)
+                {
                     // Npp didn't stop correctly, if the backup mode is activated, inform the user
-                    if (Npp.ConfXml.BackupMode > 0) {
+                    if (Npp.ConfXml.BackupMode > 0)
+                    {
                         UserCommunication.Notify("It seems that notepad++ didn't stop correctly.<br>If you lost some modifications, don't forget that you have a backup folder here :<br><br><div>" + Npp.ConfXml.BackupDirectory.ToHtmlLink() + "</div>" + (Npp.ConfXml.BackupUseCustomDir ? "<div>" + Npp.ConfXml.CustomBackupDirectory.ToHtmlLink() + "</div>" : ""), MessageImg.MsgInfo, "Notepad++ crashed", "Backup folder location");
                     }
                 }
@@ -231,16 +255,19 @@ namespace _3PA {
                 // Try to update the configuration from the distant shared folder
                 ShareExportConf.StartCheckingForUpdates();
             });
-            
+
             // check if npp version is meeting current recommended version
-            if (!string.IsNullOrEmpty(Npp.SoftwareStringVersion) && !Npp.SoftwareStringVersion.IsHigherOrEqualVersionThan(Config.RequiredNppVersion)) {
-                if (!Config.Instance.NppOutdatedVersion) {
+            if (!string.IsNullOrEmpty(Npp.SoftwareStringVersion) && !Npp.SoftwareStringVersion.IsHigherOrEqualVersionThan(Config.RequiredNppVersion))
+            {
+                if (!Config.Instance.NppOutdatedVersion)
+                {
                     UserCommunication.Notify("This version of 3P has been tested with Notepad++ " + Config.RequiredNppVersion + ", your version (" + Npp.SoftwareStringVersion + ") is outdated.<br><br>Using an outdated version, you might encounter bugs that would not occur otherwise.<br>Try to update your version of Notepad++ as soon as possible, or use 3P knowning their might be compatibility risks.<br><br><a href='https://notepad-plus-plus.org/download/'>Download the latest version of Notepad++ here</a>", MessageImg.MsgHighImportance, "Outdated version", "3P requirements are not met");
                     Config.Instance.NppOutdatedVersion = true;
                 }
-            } else
+            }
+            else
                 Config.Instance.NppOutdatedVersion = false;
-            
+
             // ReSharper disable once ObjectCreationAsStatement
             RecurentAction.StartNew(User.Ping, 1000 * 60 * 120);
 
@@ -257,8 +284,10 @@ namespace _3PA {
         /// <summary>
         /// Called on Npp shutdown
         /// </summary>
-        internal static void DoNppShutDown() {
-            try {
+        internal static void DoNppShutDown()
+        {
+            try
+            {
                 if (OnShutDown != null)
                     OnShutDown();
 
@@ -312,7 +341,9 @@ namespace _3PA {
                 Appli.ForceClose();
                 UserCommunication.ForceClose();
                 AppliMenu.ForceClose();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ErrorHandler.ShowErrors(e, "Stop");
             }
         }
@@ -321,14 +352,20 @@ namespace _3PA {
 
         #region On mouse message
 
-        public static bool MouseMessageHandler(WinApi.Messages message, Win32Api.MOUSEHOOKSTRUCT mouseStruct) {
-            switch (message) {
+        public static bool MouseMessageHandler(WinApi.Messages message, Win32Api.MOUSEHOOKSTRUCT mouseStruct)
+        {
+            switch (message)
+            {
                 // middle click : go to definition
                 case WinApi.Messages.WM_MBUTTONDOWN:
-                    if (Npp.CurrentFileInfo.IsProgress) {
-                        if (KeyboardMonitor.GetModifiers.IsCtrl) {
+                    if (Npp.CurrentFileInfo.IsProgress)
+                    {
+                        if (KeyboardMonitor.GetModifiers.IsCtrl)
+                        {
                             Npp.GoBackFromDefinition();
-                        } else {
+                        }
+                        else
+                        {
                             ProMisc.GoToDefinition(true);
                         }
                     }
@@ -336,11 +373,13 @@ namespace _3PA {
                 //break;
                 // (CTRL + ) Right click : show main menu
                 case WinApi.Messages.WM_RBUTTONUP:
-                    if (KeyboardMonitor.GetModifiers.IsCtrl) {
+                    if (KeyboardMonitor.GetModifiers.IsCtrl)
+                    {
                         // we need the cursor to be in scintilla but not on the application or the autocompletion!
                         if ((!Appli.IsVisible || !Appli.IsMouseIn()) &&
                             (!InfoToolTip.IsVisible || !InfoToolTip.IsMouseIn()) &&
-                            (!AutoCompletion.IsVisible || !AutoCompletion.IsMouseIn())) {
+                            (!AutoCompletion.IsVisible || !AutoCompletion.IsMouseIn()))
+                        {
                             AppliMenu.ShowMainMenu(true);
                             return true;
                         }
@@ -348,21 +387,26 @@ namespace _3PA {
                     break;
             }
 
-            // HACK: The following is to handle the MOVE/RESIZE event of npp's window. 
+            // HACK: The following is to handle the MOVE/RESIZE event of npp's window.
             // It would be cleaner to use a WndProc bypass but it costs too much... this is a cheaper solution
-            switch (message) {
+            switch (message)
+            {
                 case WinApi.Messages.WM_NCLBUTTONDOWN:
-                    if (!WinApi.GetWindowRect(Npp.CurrentSci.Handle).Contains(Cursor.Position)) {
+                    if (!WinApi.GetWindowRect(Npp.CurrentSci.Handle).Contains(Cursor.Position))
+                    {
                         MouseMonitor.Instance.Add(WinApi.Messages.WM_MOUSEMOVE);
                     }
                     break;
+
                 case WinApi.Messages.WM_LBUTTONUP:
                 case WinApi.Messages.WM_NCLBUTTONUP:
-                    if (MouseMonitor.Instance.Remove(WinApi.Messages.WM_MOUSEMOVE)) {
+                    if (MouseMonitor.Instance.Remove(WinApi.Messages.WM_MOUSEMOVE))
+                    {
                         if (OnNppWindowsMove != null)
                             OnNppWindowsMove();
                     }
                     break;
+
                 case WinApi.Messages.WM_MOUSEMOVE:
                     if (OnNppWindowsMove != null)
                         OnNppWindowsMove();
@@ -380,12 +424,14 @@ namespace _3PA {
         /// Called when the user presses a key
         /// </summary>
         // ReSharper disable once RedundantAssignment
-        public static bool KeyDownHandler(KeyEventArgs e) {
+        public static bool KeyDownHandler(KeyEventArgs e)
+        {
             // if set to true, the keyinput is completly intercepted, otherwise npp sill does its stuff
             bool handled = false;
 
             MenuItem menuItem = null;
-            try {
+            try
+            {
                 // Since it's a keydown message, we can receive this a lot if the user let a button pressed
                 var isSpamming = Utils.IsSpamming(e.KeyCode.ToString(), 100, true);
 
@@ -394,13 +440,15 @@ namespace _3PA {
                 if (handled)
                     return true;
 
-                // Autocompletion 
-                if (AutoCompletion.IsVisible) {
+                // Autocompletion
+                if (AutoCompletion.IsVisible)
+                {
                     handled = AutoCompletion.PerformKeyDown(e);
                 }
 
                 // next tooltip
-                if (!handled && InfoToolTip.IsVisible && e.Control && (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)) {
+                if (!handled && InfoToolTip.IsVisible && e.Control && (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down))
+                {
                     if (e.KeyCode == Keys.Up)
                         InfoToolTip.IndexToShow--;
                     else
@@ -416,25 +464,29 @@ namespace _3PA {
                 // like we normally can, for some reasons, they don't react to certain keys (like enter!)
                 // It only works "almost normally" if we ShowDialog() the form?!
                 // So i gave up and handle things here!
-                // Each control / form that should use a key not handled by Npp should implement a method 
+                // Each control / form that should use a key not handled by Npp should implement a method
                 // "PerformKeyDown" that will be triggered from here (see below)
                 var curControl = Win32Api.GetFocusedControl();
-                if (curControl != null) {
-                    var invokeResponse = curControl.InvokeMethod("PerformKeyDown", new[] {(object) e});
-                    if (invokeResponse != null && (bool) invokeResponse)
+                if (curControl != null)
+                {
+                    var invokeResponse = curControl.InvokeMethod("PerformKeyDown", new[] { (object)e });
+                    if (invokeResponse != null && (bool)invokeResponse)
                         return true;
                 }
                 var curWindow = Control.FromHandle(WinApi.GetForegroundWindow());
-                if (curWindow != null) {
-                    var invokeResponse = curWindow.InvokeMethod("PerformKeyDown", new[] {(object) e});
-                    if (invokeResponse != null && (bool) invokeResponse)
+                if (curWindow != null)
+                {
+                    var invokeResponse = curWindow.InvokeMethod("PerformKeyDown", new[] { (object)e });
+                    if (invokeResponse != null && (bool)invokeResponse)
                         return true;
                 }
 
                 // Close interfacePopups
                 if (e.KeyCode == Keys.PageDown || e.KeyCode == Keys.PageUp || e.KeyCode == Keys.Next || e.KeyCode == Keys.Prior)
                     ClosePopups();
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 ErrorHandler.ShowErrors(ex, "Occurred in : " + (menuItem == null ? new ShortcutKey(e.Control, e.Alt, e.Shift, e.KeyCode).ToString() : menuItem.ItemId));
             }
 
@@ -444,19 +496,26 @@ namespace _3PA {
         /// <summary>
         /// Check if the key/keymodifiers correspond to a item in the menu, if yes, returns this item and execute .Do()
         /// </summary>
-        private static MenuItem TriggeredMenuItem(List<MenuItem> list, bool isSpamming, KeyEventArgs e, ref bool handled) {
+        private static MenuItem TriggeredMenuItem(List<MenuItem> list, bool isSpamming, KeyEventArgs e, ref bool handled)
+        {
             // check if the user triggered a 3P function defined in the AppliMenu
-            foreach (var item in list) {
+            foreach (var item in list)
+            {
                 // shortcut corresponds to the item?
-                if ((byte) e.KeyCode == item.Shortcut._key &&
+                if ((byte)e.KeyCode == item.Shortcut._key &&
                     e.Control == item.Shortcut.IsCtrl &&
                     e.Shift == item.Shortcut.IsShift &&
                     e.Alt == item.Shortcut.IsAlt &&
-                    (item.Generic || Npp.CurrentFileInfo.IsProgress)) {
-                    if (!isSpamming && item.OnClic != null) {
-                        try {
+                    (item.Generic || Npp.CurrentFileInfo.IsProgress))
+                {
+                    if (!isSpamming && item.OnClic != null)
+                    {
+                        try
+                        {
                             item.OnClic(item);
-                        } catch (Exception ex) {
+                        }
+                        catch (Exception ex)
+                        {
                             ErrorHandler.ShowErrors(ex, "Error in : " + item.DisplayText);
                         }
                     }
@@ -478,13 +537,34 @@ namespace _3PA {
         /// <summary>
         /// Called when a file is about to be closed in notepad++
         /// </summary>
-        public static void OnNppFileBeforeClose() {
+        public static void OnNppFileBeforeClose()
+        {
             // remove the file from the opened files list
-            if (_openedFileList.Contains(Npp.CurrentFileInfo.Path)) {
+            if (_openedFileList.Contains(Npp.CurrentFileInfo.Path))
+            {
                 _openedFileList.Remove(Npp.CurrentFileInfo.Path);
+            }
+            if (_openedFileList.Count != Npp.GetOpenedFiles.Count)
+            {
+                _openedFileList.IntersectWith(Npp.GetOpenedFiles);
             }
         }
 
+        #endregion
+
+        #region OnNppFileClose
+
+        /// <summary>
+        /// Called when a file is closed in notepad++
+        /// </summary>
+        public static void OnNppFileClose()
+        {
+            if (Npp.threads.Find(o => !_openedFileList.Contains(o.Name)) != null)
+            {
+                Npp.threads.Find(o => !_openedFileList.Contains(o.Name)).Abort();
+                Npp.threads.RemoveAt(Npp.threads.FindIndex(o => !_openedFileList.Contains(o.Name)));
+            }
+        }
         #endregion
 
         #region OnNppFileOpened
@@ -492,7 +572,8 @@ namespace _3PA {
         /// <summary>
         /// Called when a new file is opened in notepad++
         /// </summary>
-        public static void OnNppFileOpened() {}
+        public static void OnNppFileOpened()
+        {        }
 
         #endregion
 
@@ -502,19 +583,23 @@ namespace _3PA {
         /// Called when the user switches tab document
         /// You can use Npp.CurrentFile and Npp.PreviousFile in this method
         /// </summary>
-        public static void DoNppBufferActivated(bool initiating = false) {
+        public static void DoNppBufferActivated(bool initiating = false)
+        {
             // Apply options to npp and scintilla depending if we are on a progress file or not
             ApplyOptionsForScintilla();
 
             // if the file has just been opened
-            if (!_openedFileList.Contains(Npp.CurrentFileInfo.Path)) {
+            if (!_openedFileList.Contains(Npp.CurrentFileInfo.Path))
+            {
                 _openedFileList.Add(Npp.CurrentFileInfo.Path);
 
                 // need to auto change encoding?
-                if (Config.Instance.AutoSwitchEncodingTo != NppEncodingFormat._Automatic_default && !string.IsNullOrEmpty(Config.Instance.AutoSwitchEncodingForFilePatterns)) {
-                    if (Npp.CurrentFileInfo.Path.TestAgainstListOfPatterns(Config.Instance.AutoSwitchEncodingForFilePatterns)) {
+                if (Config.Instance.AutoSwitchEncodingTo != NppEncodingFormat._Automatic_default && !string.IsNullOrEmpty(Config.Instance.AutoSwitchEncodingForFilePatterns))
+                {
+                    if (Npp.CurrentFileInfo.Path.TestAgainstListOfPatterns(Config.Instance.AutoSwitchEncodingForFilePatterns))
+                    {
                         NppMenuCmd cmd;
-                        if (Enum.TryParse(((int) Config.Instance.AutoSwitchEncodingTo).ToString(), true, out cmd))
+                        if (Enum.TryParse(((int)Config.Instance.AutoSwitchEncodingTo).ToString(), true, out cmd))
                             Npp.RunCommand(cmd);
                     }
                 }
@@ -530,14 +615,19 @@ namespace _3PA {
             // close popups..
             ClosePopups();
 
-            if (initiating) {
+            if (initiating)
+            {
                 // make sure to use the ProEnvironment and colorize the error counter
                 OpenedFilesInfo.UpdateFileStatus();
-            } else {
-                if (Config.Instance.CodeExplorerAutoHideOnNonProgressFile) {
+            }
+            else
+            {
+                if (Config.Instance.CodeExplorerAutoHideOnNonProgressFile)
+                {
                     CodeExplorer.Instance.Toggle(Npp.CurrentFileInfo.IsProgress);
                 }
-                if (Config.Instance.FileExplorerAutoHideOnNonProgressFile) {
+                if (Config.Instance.FileExplorerAutoHideOnNonProgressFile)
+                {
                     FileExplorer.Instance.Toggle(Npp.CurrentFileInfo.IsProgress);
                 }
             }
@@ -561,10 +651,11 @@ namespace _3PA {
         #region OnNppDocumentSaved
 
         /// <summary>
-        /// Called when the current document is saved, 
+        /// Called when the current document is saved,
         /// no matter if the document is a Progress file or not
         /// </summary>
-        public static void DoNppDocumentSaved() {
+        public static void DoNppDocumentSaved()
+        {
             // if it's a conf file, import it
             ShareExportConf.TryToImportFile(Npp.CurrentFileInfo.Path);
 
@@ -572,12 +663,13 @@ namespace _3PA {
                 return;
 
             // Display parser errors if any
-            if (Config.Instance.DisplayParserErrorsOnSave && Npp.CurrentFileInfo.IsCompilable) {
+            if (Config.Instance.DisplayParserErrorsOnSave && Npp.CurrentFileInfo.IsCompilable)
+            {
                 ProCodeFormat.DisplayParserErrors(true);
             }
-
+            Task.Factory.StartNew(() => ProGenerateCode.Factory.UpdateFunctionPrototypesIfNeeded(true));
             // update function prototypes
-            ProGenerateCode.Factory.UpdateFunctionPrototypesIfNeeded(true);
+            //ProGenerateCode.Factory.UpdateFunctionPrototypesIfNeeded(true);
         }
 
         #endregion
@@ -587,7 +679,8 @@ namespace _3PA {
         /// <summary>
         /// Called when a new file is being opened in notepad++
         /// </summary>
-        public static void DoNppFileBeforeLoad() {
+        public static void DoNppFileBeforeLoad()
+        {
             // Reset the scintilla option for the indentation mode, as crazy as this is, it DESTROYS the performances
             // when opening big files in scintilla...
             Sci.AnnotationVisible = AnnotationMode;
@@ -600,7 +693,8 @@ namespace _3PA {
         /// <summary>
         /// Called when the user changed the language for the current file
         /// </summary>
-        public static void OnLangChanged() {
+        public static void OnLangChanged()
+        {
             Npp.CurrentFileInfo.SetAsNonProgress();
             // Npp.CurrentFileInfo.Lang.LangName
         }
@@ -612,7 +706,8 @@ namespace _3PA {
         /// <summary>
         /// If an container lexer is used, scintilla will call this event when a portion of the text needs to be styled
         /// </summary>
-        public static void OnStyleNeeded(int startPos, int endPos){
+        public static void OnStyleNeeded(int startPos, int endPos)
+        {
             SyntaxHighlight.Colorize(startPos, endPos);
         }
 
@@ -624,14 +719,18 @@ namespace _3PA {
 
         /// <summary>
         /// Called when a single char is added (in case of a new line in window format, this will be called but only with \r)
-        /// Called after the UI has updated, allows to correctly read the text style, to correct 
+        /// Called after the UI has updated, allows to correctly read the text style, to correct
         /// the indentation w/o it being erased and so on...
         /// </summary>
-        public static void OnCharAdded(char c, int position) {
-            try {
+        public static void OnCharAdded(char c, int position)
+        {
+            try
+            {
                 // handles the autocompletion
                 AutoCompletion.UpdateAutocompletion(c, position);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ErrorHandler.ShowErrors(e, "Error in OnCharAdded");
             }
         }
@@ -639,11 +738,15 @@ namespace _3PA {
         /// <summary>
         /// Called when a single char is deleted
         /// </summary>
-        public static void OnCharDeleted(char c, int position) {
-            try {
+        public static void OnCharDeleted(char c, int position)
+        {
+            try
+            {
                 // handles the autocompletion
                 AutoCompletion.UpdateAutocompletion();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ErrorHandler.ShowErrors(e, "Error in OnCharDeleted");
             }
         }
@@ -652,12 +755,16 @@ namespace _3PA {
 
         #region OnSciUpdateUi
 
-        public static void OnSciUpdateUi(SCNotification nc) {
-            if (nc.updated == (int) SciMsg.SC_UPDATE_V_SCROLL ||
-                nc.updated == (int) SciMsg.SC_UPDATE_H_SCROLL) {
+        public static void OnSciUpdateUi(SCNotification nc)
+        {
+            if (nc.updated == (int)SciMsg.SC_UPDATE_V_SCROLL ||
+                nc.updated == (int)SciMsg.SC_UPDATE_H_SCROLL)
+            {
                 // user scrolled
                 OnPageScrolled();
-            } else if (nc.updated == (int) SciMsg.SC_UPDATE_SELECTION) {
+            }
+            else if (nc.updated == (int)SciMsg.SC_UPDATE_SELECTION)
+            {
                 // the user changed its selection
                 OnUpdateSelection();
             }
@@ -670,9 +777,11 @@ namespace _3PA {
         /// <summary>
         /// Called when the text in scintilla is modified (added/deleted) by the user (called after UI update)
         /// </summary>
-        public static void OnTextModified(SCNotification nc, bool insertedText, bool deletedText, bool singleCharModification, bool undo, bool redo) {
+        public static void OnTextModified(SCNotification nc, bool insertedText, bool deletedText, bool singleCharModification, bool undo, bool redo)
+        {
             ParserHandler.ParseDocumentAsap();
-            if (!singleCharModification) {
+            if (!singleCharModification)
+            {
                 ClosePopups();
             }
         }
@@ -684,14 +793,17 @@ namespace _3PA {
         /// <summary>
         /// When the user click on the margin
         /// </summary>
-        public static void OnSciMarginClick(SCNotification nc) {
+        public static void OnSciMarginClick(SCNotification nc)
+        {
             if (!Npp.CurrentFileInfo.IsProgress)
                 return;
 
             // click on the error margin
-            if (nc.margin == OpenedFilesInfo.ErrorMarginNumber) {
+            if (nc.margin == OpenedFilesInfo.ErrorMarginNumber)
+            {
                 // if it's an error symbol that has been clicked, the error on the line will be cleared
-                if (!OpenedFilesInfo.ClearLineErrors(Sci.LineFromPosition(nc.position.ToInt32()))) {
+                if (!OpenedFilesInfo.ClearLineErrors(Sci.LineFromPosition(nc.position.ToInt32())))
+                {
                     // if nothing has been cleared, we go to the next error position
                     OpenedFilesInfo.GoToNextError(Sci.LineFromPosition(nc.position.ToInt32()));
                 }
@@ -705,7 +817,8 @@ namespace _3PA {
         /// <summary>
         /// When the user leaves his cursor inactive on npp
         /// </summary>
-        public static void OnSciDwellStart() {
+        public static void OnSciDwellStart()
+        {
             if (WinApi.GetForegroundWindow() == Npp.Handle)
                 InfoToolTip.ShowToolTipFromDwell();
         }
@@ -717,7 +830,8 @@ namespace _3PA {
         /// <summary>
         /// When the user moves his cursor
         /// </summary>
-        public static void OnSciDwellEnd() {
+        public static void OnSciDwellEnd()
+        {
             if (!KeyboardMonitor.GetModifiers.IsCtrl)
                 InfoToolTip.Cloak(true);
         }
@@ -729,7 +843,8 @@ namespace _3PA {
         /// <summary>
         /// called when the user changes its selection in npp (the caret moves)
         /// </summary>
-        public static void OnUpdateSelection() {
+        public static void OnUpdateSelection()
+        {
             // close popup windows
             ClosePopups();
             //Snippets.FinalizeCurrent();
@@ -748,7 +863,8 @@ namespace _3PA {
         /// <summary>
         /// called when the user scrolls..
         /// </summary>
-        public static void OnPageScrolled() {
+        public static void OnPageScrolled()
+        {
             ClosePopups();
             // parse the current part of the document
             if (!Npp.CurrentFileInfo.IsProgress)
@@ -756,16 +872,21 @@ namespace _3PA {
         }
 
         #endregion
-        
+
         #region Apply Scintilla options
 
-        public static Annotation AnnotationMode {
+        public static Annotation AnnotationMode
+        {
             get { return _annotationMode; }
-            set {
+            set
+            {
                 // we want to set to our value
-                if (value == Annotation.Indented) {
+                if (value == Annotation.Indented)
+                {
                     Sci.AnnotationVisible = Annotation.Indented;
-                } else {
+                }
+                else
+                {
                     _annotationMode = value;
                 }
             }
@@ -777,22 +898,24 @@ namespace _3PA {
         private static int _tabWidth = -1;
         private static WhitespaceMode _whitespaceMode = WhitespaceMode.Invisible;
 
-        private static int[] _initiatedScintilla = {0, 0};
+        private static int[] _initiatedScintilla = { 0, 0 };
         private static bool _hasBeenInit;
 
         /// <summary>
         /// We need certain options to be set to specific values when running this plugin, make sure to set everything back to normal
         /// when switch tab or when we leave npp, param can be set to true to force the default values
         /// </summary>
-        internal static void ApplyOptionsForScintilla() {
+        internal static void ApplyOptionsForScintilla()
+        {
             // need to do this stuff only once for each scintilla
 
             var curScintilla = Npp.CurrentSciId; // 0 or 1
-            if (_initiatedScintilla[curScintilla] == 0) {
+            if (_initiatedScintilla[curScintilla] == 0)
+            {
                 // Extra settings at the start
                 Sci.MouseDwellTime = Config.Instance.ToolTipmsBeforeShowing;
                 Sci.EndAtLastLine = false;
-                //Npp.EventMask = (int) (SciModificationMod.SC_MOD_INSERTTEXT | SciModificationMod.SC_MOD_DELETETEXT | SciModificationMod.SC_PERFORMED_USER | SciModificationMod.SC_PERFORMED_UNDO | SciModificationMod.SC_PERFORMED_REDO);                
+                //Npp.EventMask = (int) (SciModificationMod.SC_MOD_INSERTTEXT | SciModificationMod.SC_MOD_DELETETEXT | SciModificationMod.SC_PERFORMED_USER | SciModificationMod.SC_PERFORMED_UNDO | SciModificationMod.SC_PERFORMED_REDO);
                 _initiatedScintilla[curScintilla] = 1;
             }
 
@@ -802,8 +925,10 @@ namespace _3PA {
                 ApplyDefaultOptionsForScintilla();
         }
 
-        internal static void ApplyPluginOptionsForScintilla() {
-            if (!_hasBeenInit || !Npp.PreviousFileInfo.IsProgress) {
+        internal static void ApplyPluginOptionsForScintilla()
+        {
+            if (!_hasBeenInit || !Npp.PreviousFileInfo.IsProgress)
+            {
                 // read default options
                 _tabWidth = Sci.TabWidth;
                 _indentWithTabs = Sci.UseTabs;
@@ -824,7 +949,8 @@ namespace _3PA {
             SyntaxHighlight.ActivateHighlight();
         }
 
-        internal static void ApplyDefaultOptionsForScintilla() {
+        internal static void ApplyDefaultOptionsForScintilla()
+        {
             // nothing has been done yet, no need to reset anything! same if we already were on a non progress file
             if (!_hasBeenInit || !Npp.PreviousFileInfo.IsProgress)
                 return;
@@ -847,12 +973,12 @@ namespace _3PA {
         /// <summary>
         /// Call this method to close all popup/autocompletion form and alike
         /// </summary>
-        public static void ClosePopups() {
+        public static void ClosePopups()
+        {
             AutoCompletion.Cloak();
             InfoToolTip.Cloak();
         }
 
         #endregion
-
     }
 }

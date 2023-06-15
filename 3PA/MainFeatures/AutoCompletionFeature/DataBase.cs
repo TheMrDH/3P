@@ -145,7 +145,27 @@ namespace _3PA.MainFeatures.AutoCompletionFeature {
                 ErrorHandler.ShowErrors(e, "FetchCurrentDbInfo");
             }
         }
-
+        public void PingCurrentDb(Action onPingDone, string outDumpFilePath, string dbNames)
+        {
+            try
+            {
+                // save the filename of the output database info file for this environment
+                var exec = new ProExecutionDatabasePing
+                {
+                    NeedDatabaseConnection = false
+                };
+                
+                exec.DBNames = dbNames;
+                exec.OnExecutionOk += execution => {
+                    // copy the dump to the folder database
+                };
+                exec.Start();
+            }
+            catch (Exception e)
+            {
+                ErrorHandler.ShowErrors(e, "FetchCurrentDbInfo");
+            }
+        }
         #endregion
 
         #region private methods

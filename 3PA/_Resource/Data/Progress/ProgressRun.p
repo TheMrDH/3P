@@ -4,7 +4,6 @@ This file was created with the 3P :  https://jcaillon.github.io/3P/
 */
 
 /* When executed from 3P, the preprocessed variables below are set to real values */
-
 /* if ExecutionType not already defined */
 &IF DEFINED(LogPath) = 0 &THEN
     &SCOPED-DEFINE ExecutionType "DICTIONNARY"

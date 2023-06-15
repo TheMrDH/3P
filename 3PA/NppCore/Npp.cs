@@ -32,6 +32,10 @@ using _3PA.Lib;
 using _3PA.Lib._3pUpdater;
 using _3PA.MainFeatures;
 using _3PA.WindowsCore;
+using System.Threading;
+using _3PA.MainFeatures.Parser;
+using _3PA.MainFeatures.Parser.Pro.Parse;
+using _3PA.MainFeatures.CodeExplorer;
 
 namespace _3PA.NppCore {
 
@@ -42,7 +46,10 @@ namespace _3PA.NppCore {
         private static SciApi _primarySci;
         private static SciApi _secondarySci;
         private static int _curSciId;
-
+        public static List<Thread> threads = new List<Thread>();
+        public delegate void ActionRef<T1>(ref T1 arg1);
+        public static Dictionary<string, ActionRef<Token>> parseFunctions = new Dictionary<string, ActionRef<Token>>();
+        public static Dictionary<string, ParseResultsObject> parseResults = new Dictionary<string, ParseResultsObject>();
         /// <summary>
         /// Returns the current scintilla instance, you can then use this object to send
         /// direct messages to scintilla

@@ -29,6 +29,8 @@ using _3PA.MainFeatures.Parser;
 using _3PA.MainFeatures.Parser.Pro;
 using _3PA.NppCore;
 using _3PA._Resource;
+using System.Windows.Forms;
+using System.Threading;
 
 namespace _3PA.MainFeatures.Pro {
     internal class ProGenerateCode {
@@ -73,6 +75,19 @@ namespace _3PA.MainFeatures.Pro {
             IProCode codeCode;
             string insertText;
             string blockDescription;
+            int counter = 0;
+
+            while(_parser == null && counter != 50)
+            {
+                counter += 1;
+                Thread.Sleep(50);
+            }
+
+            if(_parser == null)
+            {
+                UserCommunication.Message("The internal parser of 3P is null, this is due to multithreading delays.", MessageImg.MsgDebug, "", "");
+                return;
+            }
 
             // in case of an incorrect document, warn the user
             var parserErrors = _parser.ParseErrorsInHtml;
@@ -85,24 +100,41 @@ namespace _3PA.MainFeatures.Pro {
                 object input = new ProCodeFunction();
                 if (UserCommunication.Input(ref input, "Please provide information about the procedure that will be created", MessageImg.MsgQuestion, "Generate code", "Insert a new function") != 0)
                     return;
-                codeCode = (IProCode) input;
+                codeCode = (IProCode)input;
 
                 codeCode.Name = codeCode.Name.MakeValidVariableName();
 
                 blockDescription = @"_FUNCTION " + codeCode.Name + " Procedure";
                 insertText = Encoding.Default.GetString(DataResources.FunctionImplementation).Trim();
-                insertText = insertText.Replace("{&type}", ((ProCodeFunction) codeCode).Type);
-                insertText = insertText.Replace("{&private}", ((ProCodeFunction) codeCode).IsPrivate ? " PRIVATE" : "");
+                insertText = insertText.Replace("{&type}", ((ProCodeFunction)codeCode).Type);
+                insertText = insertText.Replace("{&private}", ((ProCodeFunction)codeCode).IsPrivate ? " PRIVATE" : "");
             } else if (typeof(ParsedProcedure) == typeof(T)) {
                 object input = new ProCodeProcedure();
                 if (UserCommunication.Input(ref input, "Please provide information about the procedure that will be created", MessageImg.MsgQuestion, "Generate code", "Insert a new procedure") != 0)
                     return;
-                codeCode = (IProCode) input;
+                codeCode = (IProCode)input;
 
                 blockDescription = @"_PROCEDURE " + codeCode.Name + " Procedure";
                 insertText = Encoding.Default.GetString(DataResources.InternalProcedure).Trim();
-                insertText = insertText.Replace("{&private}", ((ProCodeProcedure) codeCode).IsPrivate ? " PRIVATE" : "");
-            } else {
+                insertText = insertText.Replace("{&private}", ((ProCodeProcedure)codeCode).IsPrivate ? " PRIVATE" : "");
+            } else if (typeof(T) == typeof(ParsedSnippet)) 
+            {
+                object input = new ProCodeSnippet();
+                
+                if (UserCommunication.Input(ref input, "Please provide information about the code snippet that will be created", MessageImg.MsgQuestion, "Generate code", "Insert a new snippet") != 0)
+                    return;
+                blockDescription = "";
+                codeCode = (IProCode)input;
+                byte[] temp = Config.Instance.CodeSnippetDir != "" ? System.IO.File.ReadAllBytes(Config.Instance.CodeSnippetDir): DataResources.BaseSnippets;
+                insertText = Encoding.Default.GetString(temp).Trim().Split('~').Last().Trim().Split('+').Where(o => o.ToLower().Contains(((ProCodeSnippet)codeCode).Type.ToLower())).First().Trim().Trim();
+                //MessageBox.Show(insertText.LastIndexOf('#') + " | " + insertText.IndexOf('#') + (insertText.IndexOf('#') > 0 && insertText.LastIndexOf('#') > insertText.IndexOf('#')) + " | " + insertText.Substring(insertText.IndexOf('#'), (insertText.LastIndexOf('#')- insertText.IndexOf('#'))).Replace("#", ""));
+                if (insertText.IndexOf('#') > 0 && insertText.LastIndexOf('#') > insertText.IndexOf('#'))
+                {
+                    insertText = insertText.Replace(insertText.Substring(insertText.IndexOf('#'), (insertText.LastIndexOf('#') - insertText.IndexOf('#'))).Replace("#", ""), "").Replace("#", "").Trim();
+                }
+                codeCode.Name = codeCode.Name.Length == 0 ? "Template" : codeCode.Name;
+            }
+            else {
                 return;
             }
 
@@ -115,7 +147,7 @@ namespace _3PA.MainFeatures.Pro {
                 return;
             }
 
-            insertText = insertText.Replace("{&name}", codeCode.Name);
+            insertText = insertText.Replace("{&name}", codeCode.Name).Trim();
 
             // reposition caret and insert
             bool insertBefore;
@@ -180,7 +212,6 @@ namespace _3PA.MainFeatures.Pro {
                     return;
                 _ignoredFiles.Remove(Npp.CurrentFileInfo.Path);
             }
-
             UpdateFunctionPrototypes(silent);
         }
 
@@ -194,7 +225,6 @@ namespace _3PA.MainFeatures.Pro {
         /// </summary>
         /// <remarks>This method is costly because we parse everything potentially X times, but it's much simpler this way...</remarks>
         private void UpdateFunctionPrototypes(bool silent) {
-
             try {
                 List<ParsedImplementation> listOfOutDatedProto;
                 List<ParsedImplementation> listOfSoloImplementation;
@@ -206,7 +236,6 @@ namespace _3PA.MainFeatures.Pro {
                 var nbNotCreated = 0;
                 var nbThingsDone = 0;
                 var nbToDo = GetPrototypesLists(out listOfOutDatedProto, out listOfSoloImplementation, out listOfUselessProto);
-
                 // if there is at least 1 thing to do
                 if (nbToDo > 0) {
                     Sci.BeginUndoAction();
@@ -297,7 +326,10 @@ namespace _3PA.MainFeatures.Pro {
         /// Gets the list of functions/proto of interest
         /// </summary>
         private int GetPrototypesLists(out List<ParsedImplementation> listOfOutDatedProto, out List<ParsedImplementation> listOfSoloImplementation, out List<ParsedPrototype> listOfUselessProto) {
-
+            int count = 0;
+            while(_parsedItems == null && count < 10){ //Wait for list to populate for a bit, if not continue as normal.
+                Thread.Sleep(60);
+            }
             // list the outdated proto
             listOfOutDatedProto = _parsedItems.Where(item => {
                 var funcItem = item as ParsedImplementation;
@@ -614,8 +646,16 @@ namespace _3PA.MainFeatures.Pro {
         /// Parse the current document
         /// </summary>
         private void ParseNow() {
-            _parser = new Parser.Pro.Parse.Parser(Sci.Text, Npp.CurrentFileInfo.Path, null, false);
-            _parsedItems = _parser.ParsedItemsList.Where(item => !item.Flags.HasFlag(ParseFlag.FromInclude)).ToNonNullList();
+            string threadName = "ParseNow_" + Npp.CurrentFileInfo.Path;
+            if (Npp.threads.Where(o => o.Name == threadName).Count() == 0)
+            {
+                Thread thread = new Thread(() => { string fname = threadName; _parser = new Parser.Pro.Parse.Parser(Sci.Text, Npp.CurrentFileInfo.Path, null, false);
+                                                                              _parsedItems = _parser.ParsedItemsList.Where(item => !item.Flags.HasFlag(ParseFlag.FromInclude)).ToNonNullList();
+                                                                              Npp.threads.RemoveAll(o => o.Name == fname); });
+                thread.Name = threadName;
+                thread.Start();
+                Npp.threads.Add(thread);
+            }
         }
 
         #endregion
@@ -659,6 +699,19 @@ namespace _3PA.MainFeatures.Pro {
             public bool IsPrivate { get; set; }
 
             [YamuiInput("Insertion position", Order = 2)]
+            public ProInsertPosition InsertPosition { get; set; }
+        }
+
+        internal class ProCodeSnippet : IProCode 
+        { 
+            [YamuiInput("Name", Order = 0)]
+            public string Name { get; set; }
+
+            [YamuiInput("Snippet Type", Order = 1, AllowListedValuesOnly = true)]
+            public string Type  = Encoding.Default.GetString(Config.Instance.CodeSnippetDir != "" ? System.IO.File.ReadAllBytes(Config.Instance.CodeSnippetDir) : DataResources.BaseSnippets).Split('~').First().Trim();
+
+
+            [YamuiInput("Insertion position", Order = 3)]
             public ProInsertPosition InsertPosition { get; set; }
         }
 

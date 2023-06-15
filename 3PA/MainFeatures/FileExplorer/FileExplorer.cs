@@ -27,6 +27,7 @@ using _3PA.MainFeatures.Appli;
 using _3PA.NppCore;
 using _3PA.NppCore.NppInterfaceForm;
 using _3PA._Resource;
+using System.Windows.Forms;
 
 namespace _3PA.MainFeatures.FileExplorer {
     internal class FileExplorer : NppDockableDialog<FileExplorerForm> {
@@ -53,6 +54,16 @@ namespace _3PA.MainFeatures.FileExplorer {
 
         protected override void InitForm() {
             Form = new FileExplorerForm(_fakeForm);
+            System.Windows.Forms.MenuItem[] menuItem = { new System.Windows.Forms.MenuItem(), new System.Windows.Forms.MenuItem() };
+            ContextMenu contextMenu = new ContextMenu();
+            menuItem[0].Text = "Open In Explorer";
+            menuItem[0].Name = "OpenExplorer";
+            menuItem[0].Click += Form.FileExplorerCompile;
+            menuItem[1].Name = "CompileFile";
+            menuItem[1].Click += Form.FileExplorerCompile;
+            contextMenu.MenuItems.AddRange(menuItem);
+            contextMenu.Popup += Form.FormExplorerPopup;
+            Form.ContextMenu = contextMenu;
         }
 
         protected override void OnVisibilityChange(bool visible) {
@@ -134,7 +145,7 @@ namespace _3PA.MainFeatures.FileExplorer {
                         Size = fileInfo.Length,
                         CreateDateTime = fileInfo.CreationTime,
                         ModifieDateTime = fileInfo.LastWriteTime,
-                        Type = fileExt
+                        Type = fileExt,
                     });
                 }
             } catch (Exception e) {

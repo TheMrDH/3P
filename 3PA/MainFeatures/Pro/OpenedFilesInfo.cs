@@ -127,30 +127,48 @@ namespace _3PA.MainFeatures.Pro {
         /// <summary>
         /// Updates the number of errors in the FileExplorer form and the file status
         /// </summary>
-        public static void UpdateFileStatus() {
-            var currentFilePath = Npp.CurrentFileInfo.Path;
-
-            // UpdatedOperation event
-            if (OnUpdatedOperation != null) {
-                if (_sessionInfo.ContainsKey(currentFilePath))
-                    OnUpdatedOperation(new UpdatedOperationEventArgs(_sessionInfo[currentFilePath].CurrentOperation));
-                else
-                    OnUpdatedOperation(new UpdatedOperationEventArgs(0));
-            }
-
-            // UpdatedErrors event
-            if (OnUpdatedErrors != null) {
-                if (_sessionInfo.ContainsKey(currentFilePath) && _sessionInfo[currentFilePath].FileErrors != null) {
-                    // find max error
-                    ErrorLevel maxLvl = ErrorLevel.NoErrors;
-                    if (_sessionInfo[currentFilePath].FileErrors.Any()) {
-                        maxLvl = _sessionInfo[currentFilePath].FileErrors.OrderByDescending(error => error.Level).First().Level;
-                    }
-                    OnUpdatedErrors(new UpdatedErrorsEventArgs(maxLvl, _sessionInfo[currentFilePath].FileErrors.Count));
-                } else
-                    OnUpdatedErrors(new UpdatedErrorsEventArgs(ErrorLevel.NoErrors, 0));
-            }
+        public static FileToCompile _FileToCompile { get; set; }
+        public static void UpdateSpecificFileStatus(FileToCompile fileToCompile)
+        {
+            _FileToCompile = fileToCompile;
+            UpdateFileStatus();
         }
+        public static void UpdateFileStatus() {
+            string currentFilePath = "";
+            if(_FileToCompile == null)
+            {
+                _FileToCompile = new FileToCompile(Npp.CurrentFileInfo.Path);
+            }
+
+                currentFilePath = _FileToCompile.SourcePath;
+                // UpdatedOperation event
+                if (OnUpdatedOperation != null)
+                {
+                    if (_sessionInfo.ContainsKey(currentFilePath))
+                        OnUpdatedOperation(new UpdatedOperationEventArgs(_sessionInfo[currentFilePath].CurrentOperation));
+                    else
+                        OnUpdatedOperation(new UpdatedOperationEventArgs(0));
+                }
+
+                // UpdatedErrors event
+                if (OnUpdatedErrors != null)
+                {
+                    if (_sessionInfo.ContainsKey(currentFilePath) && _sessionInfo[currentFilePath].FileErrors != null)
+                    {
+                        // find max error
+                        ErrorLevel maxLvl = ErrorLevel.NoErrors;
+                        if (_sessionInfo[currentFilePath].FileErrors.Any())
+                        {
+                            maxLvl = _sessionInfo[currentFilePath].FileErrors.OrderByDescending(error => error.Level).First().Level;
+                        }
+                        OnUpdatedErrors(new UpdatedErrorsEventArgs(maxLvl, _sessionInfo[currentFilePath].FileErrors.Count));
+                    }
+                    else
+                        OnUpdatedErrors(new UpdatedErrorsEventArgs(ErrorLevel.NoErrors, 0));
+                }
+        }
+
+        
 
         /// <summary>
         /// Displays the errors for the current file (if any)

@@ -29,6 +29,7 @@ using _3PA.MainFeatures.Parser.Pro;
 using _3PA.NppCore;
 using _3PA.NppCore.NppInterfaceForm;
 using _3PA._Resource;
+using System.Threading;
 
 namespace _3PA.MainFeatures.CodeExplorer {
     internal partial class CodeExplorerForm : NppDockableDialogForm {
@@ -73,6 +74,7 @@ namespace _3PA.MainFeatures.CodeExplorer {
                 }
             };
             filterbox.Initialize(yamuiList);
+            filterbox.ExtraButtonsList[0].AcceptsAnyClick = true;
             filterbox.ExtraButtonsList[1].BackGrndImage = _isExpanded ? ImageResources.Collapse : ImageResources.Expand;
             filterbox.ExtraButtonsList[2].BackGrndImage = Config.Instance.CodeExplorerSortingType == SortingType.Alphabetical ? ImageResources.Alphabetical_sorting : ImageResources.Numerical_sorting;
             filterbox.ExtraButtonsList[3].UseGreyScale = !Config.Instance.CodeExplorerDisplayPersistentItems;
@@ -176,12 +178,69 @@ namespace _3PA.MainFeatures.CodeExplorer {
         }
 
         private void buttonRefresh_Click(YamuiButtonImage sender, EventArgs e) {
-            if (Refreshing)
+            MouseEventArgs mouseEventArgs = (MouseEventArgs) e;
+            
+            if (mouseEventArgs.Button == MouseButtons.Left)
+            {
+                if (Refreshing)
+                    return;
+                ParserHandler.ClearStaticData();
+                Npp.CurrentSci.Lines.Reset();
+                ParserHandler.ParseDocumentNow();
+                Sci.GrabFocus();
+            }
+            else if (((MouseEventArgs)e).Button == MouseButtons.Right)
+            {
+                List<string> list = new List<string> { "List Threads", "Close" };
+                object temp = null ;
+                object temp2 = null ;
+                int i = UserCommunication.Input(ref temp, Npp.threads.Count + " active threads. One may be the parser. ", MessageImg.MsgDebug, "Number of threads:", "", list);
+                if (Npp.threads.Count > 0 && i == 0 )
+                {
+                    string threadList = "";
+                    Npp.threads.ForEach(o => { threadList += "<br><a href=\"" + o.Name + "\" style =\"text-decoration: underline\">" + o.Name + "</a></br>"; });
+                    
+                    int m = UserCommunication.Input(ref temp2, "Click link to kill it." + threadList, MessageImg.MsgDebug, "Active threads:", "", new List<string>() { "Ok", "Cancel", "Kill All" },  args =>
+                    {
+
+                        int tempThread = Npp.threads.FindIndex(o => o.Name == args.Link);
+                        if (tempThread == -1)
+                        {
+                            UserCommunication.Message("Thread not found: " + args.Link, MessageImg.MsgError, "Thread not found", "");
+                        }
+                        else
+                        {
+                            Npp.threads.Remove(Npp.threads[tempThread]);
+                            args.Handled = true;
+                            UserCommunication.CloseUniqueMessage("Thread List");
+                            UserCommunication.Message("Killed thread: " + args.Link, MessageImg.MsgPoison, "Thread Killed", "");
+                        }
+                    }
+                    );
+
+                    if(m == 2)
+                    {
+                        string temp3 = "<div>";
+                        foreach(Thread n in Npp.threads)
+                        {
+                            n.Abort();
+                            temp3 += "<br><span>" + n.Name + ": Killed. </span></br>";
+                        }
+                        temp3 += "</div>";
+                        Npp.threads.RemoveAll(o => o.Name != "");
+                        UserCommunication.Message(temp3 , MessageImg.MsgPoison, "Threads Killed", "");
+                    }
+                }
+                else if ( i == 0)
+                {
+                    UserCommunication.Message( "No active threads.", MessageImg.MsgDebug, "", "" );
+                }
                 return;
-            ParserHandler.ClearStaticData();
-            Npp.CurrentSci.Lines.Reset();
-            ParserHandler.ParseDocumentNow();
-            Sci.GrabFocus();
+            }
+            else
+            {
+                return;
+            }
         }
 
         private void buttonSort_Click(YamuiButtonImage sender, EventArgs e) {

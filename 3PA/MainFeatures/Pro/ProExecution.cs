@@ -29,6 +29,7 @@ using _3PA.Lib;
 using _3PA.MainFeatures.Appli;
 using _3PA.MainFeatures.Pro.Deploy;
 using _3PA._Resource;
+using System.Windows.Forms;
 
 namespace _3PA.MainFeatures.Pro {
     
@@ -53,6 +54,8 @@ namespace _3PA.MainFeatures.Pro {
                     return new ProExecutionProlint();
                 case ExecutionType.GenerateDebugfile:
                     return new ProExecutionGenerateDebugfile();
+                case ExecutionType.CompileSel:
+                    return new ProExecutionCompile();
                 default:
                     throw new Exception("Factory : the type " + executionType + " does not exist");
             }
@@ -165,6 +168,7 @@ namespace _3PA.MainFeatures.Pro {
         protected Process _process;
 
         protected bool _useBatchMode;
+        protected bool _batchModeNoWindow;
 
         protected string _runnerPath;
 
@@ -220,7 +224,6 @@ namespace _3PA.MainFeatures.Pro {
         /// </summary>
         /// <returns></returns>
         public bool Start() {
-
             // check parameters
             var errorString = CheckParameters();
             if (!string.IsNullOrEmpty(errorString)) {
@@ -236,7 +239,7 @@ namespace _3PA.MainFeatures.Pro {
             _localTempDir = Path.Combine(Config.FolderTemp, "exec_" + DateTime.Now.ToString("HHmmssfff") + "_" + Path.GetRandomFileName());
             if (!Utils.CreateDirectory(_localTempDir))
                 return false;
-
+            
             // move .ini file into the execution directory
             if (File.Exists(ProEnv.IniPath)) {
                 _tempInifilePath = Path.Combine(_localTempDir, "base.ini");
@@ -652,7 +655,47 @@ namespace _3PA.MainFeatures.Pro {
 
         #endregion
     }
+    internal class ProExecutionDatabasePing : ProExecution
+    {
 
+        #region Properties
+
+        public override ExecutionType ExecutionType { get { return ExecutionType.DBPing; } }
+
+        /// <summary>
+        /// File to the output path that contains the ping results.
+        /// </summary>
+        public string OutputPath { get; set; }
+        public string DBNames { get; set; }
+
+        #endregion
+
+        #region Override
+
+        protected override bool SetExecutionInfo()
+        {
+
+            OutputPath = Path.Combine(_localTempDir, "db.connect");
+            SetPreprocessedVar("OutputPath", OutputPath.PreProcQuoter());
+
+            var fileToExecute = "db_" + DateTime.Now.ToString("yyMMdd_HHmmssfff") + ".p";
+            string execution = System.Text.Encoding.UTF8.GetString(DataResources.DatabaseConnectionCheck);
+            execution = execution.Replace(@"{$LIST}", DBNames).Replace(@"{$DIR}", _localTempDir);
+            byte[] byteArr = System.Text.Encoding.ASCII.GetBytes(execution);
+            if (!Utils.FileWriteAllBytes(Path.Combine(_localTempDir, fileToExecute), byteArr))
+                return false;
+            SetPreprocessedVar("CurrentFilePath", Path.Combine(_localTempDir, fileToExecute).PreProcQuoter());
+
+            return true;
+        }
+
+        protected override bool CanUseBatchMode()
+        {
+            return true;
+        }
+
+        #endregion
+    }
     #endregion
 
     #region ProExecutionTableCrc
@@ -860,6 +903,8 @@ namespace _3PA.MainFeatures.Pro {
         DeploymentHook = 17,
         ProVersion = 18,
         TableCrc = 19,
+        CompileSel = 20,
+        DBPing = 21,
     }
 
     #endregion

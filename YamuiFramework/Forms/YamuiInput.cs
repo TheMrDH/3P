@@ -412,6 +412,12 @@ namespace YamuiFramework.Forms {
             return Show(ownerHandle, caption, htmlTitle, htmlMessage, buttonsList, ref data, out msgBox, maxFormWidth, maxFormHeight, minFormWidth, false, onLinkClicked);
         }
 
+        public static YamuiInput BuildMsg(IntPtr ownerHandle, string caption, string htmlTitle, string htmlMessage, List<string> buttonsList, ref object data, ref int clickOut, int maxFormWidth = 0, int maxFormHeight = 0, int minFormWidth = 0, EventHandler<HtmlLinkClickedEventArgs> onLinkClicked = null) {
+            YamuiInput msgBox = null;
+            clickOut = Show(ownerHandle, caption, htmlTitle, htmlMessage, buttonsList, ref data, out msgBox, maxFormWidth, maxFormHeight, minFormWidth, false, onLinkClicked);
+            return msgBox;
+        }
+
         private static int Show(IntPtr ownerHandle, string caption, string htmlTitle, string htmlMessage, List<string> buttonsList, ref object data, out YamuiInput msgBox, int maxFormWidth = 0, int maxFormHeight = 0, int minFormWidth = 0, bool waitResponse = true, EventHandler<HtmlLinkClickedEventArgs> onLinkClicked = null) {
             var ownerRect = WinApi.GetWindowRect(ownerHandle);
             var ownerLocation = ownerRect.Location;

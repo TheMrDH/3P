@@ -460,6 +460,24 @@ namespace _3PA.MainFeatures.Parser.Pro {
         }
     }
 
+    internal class ParsedSnippet : ParsedFunction
+    {
+        /// <summary>
+        /// true if it's a simple FORWARD and the implementation is in the same proc,
+        /// false otherwise (meaning we matched a IN)
+        /// </summary>
+        public bool SimpleForward { get; set; }
+
+        public override void Accept(IParserVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+
+        public ParsedSnippet(string name, Token token, string tempReturnType) : base(name, token, tempReturnType)
+        {
+        }
+    }
+
     /// <summary>
     /// Procedure parsed item
     /// </summary>

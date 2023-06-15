@@ -366,7 +366,7 @@ namespace _3PA.MainFeatures.Parser.Pro.Visit {
             PushToCodeExplorer(
                 null,
                 new RootCodeItem {
-                    DisplayText = "Root",
+                    DisplayText = "Root -"+ pars.FilePath.Split('\\').ElementAt(pars.FilePath.Split('\\').Count() - 2) + "\\" + pars.FilePath.Split('\\').ElementAt(pars.FilePath.Split('\\').Count() - 1),
                     SubText = null,
                     DocumentOwner = pars.FilePath,
                     GoToLine = pars.Line,
@@ -497,6 +497,28 @@ namespace _3PA.MainFeatures.Parser.Pro.Visit {
             proc.ParsedBaseItem = pars;
             proc.FromParser = true;
             proc.SubText = pars.Flags.HasFlag(ParseFlag.External) ? pars.ExternalDllName : null;
+            proc.Ranking = AutoCompletion.FindRankingOfParsedItem(pars.Name);
+            proc.Flags = pars.Flags;
+            PushToAutoCompletion(proc, pars);
+        }
+
+        public void Visit(ParsedSnippet pars)
+        {
+            // to code explorer
+            var parentNode = pars.Flags.HasFlag(ParseFlag.External) ? GetExplorerListNode("External procedures", CodeExplorerIconType.ExternalProcedure) : GetExplorerListNode("Procedures", CodeExplorerIconType.Procedure);
+            var newNode = CodeItem.Factory.New(pars.Flags.HasFlag(ParseFlag.External) ? CodeExplorerIconType.ExternalProcedure : CodeExplorerIconType.Procedure);
+            newNode.DisplayText = pars.Name;
+            newNode.Flags = pars.Flags;
+            newNode.DocumentOwner = pars.FilePath;
+            newNode.GoToLine = pars.Line;
+            newNode.GoToColumn = pars.Column;
+            PushToCodeExplorer(parentNode, newNode);
+
+            // to completion data
+            var proc = CompletionItem.Factory.New(pars.Flags.HasFlag(ParseFlag.External) ? CompletionType.ExternalProcedure : CompletionType.Procedure);
+            proc.DisplayText = pars.Name;
+            proc.ParsedBaseItem = pars;
+            proc.FromParser = true;
             proc.Ranking = AutoCompletion.FindRankingOfParsedItem(pars.Name);
             proc.Flags = pars.Flags;
             PushToAutoCompletion(proc, pars);

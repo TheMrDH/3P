@@ -29,6 +29,7 @@ using _3PA.MainFeatures.Appli;
 using _3PA.MainFeatures.ModificationsTag;
 using _3PA.NppCore;
 using _3PA._Resource;
+using System.Windows.Forms;
 
 namespace _3PA.MainFeatures.Pro.Deploy {
 
@@ -565,7 +566,6 @@ namespace _3PA.MainFeatures.Pro.Deploy {
         /// </summary>
         public static string FormatCompilationResultForSingleFile(string sourceFilePath, FileToCompile fileToCompile, List<FileToDeploy> listDeployedFiles) {
             var line = new StringBuilder();
-
             line.Append("<div style='padding-bottom: 5px;'>");
             line.Append("<img height='15px' src='" + Utils.GetExtensionImage((Path.GetExtension(sourceFilePath) ?? "").Replace(".", "")) + "'>");
             line.Append("<b>" + sourceFilePath.ToHtmlLink(Path.GetFileName(sourceFilePath), true) + "</b> in " + Path.GetDirectoryName(sourceFilePath).ToHtmlLink());
@@ -591,6 +591,56 @@ namespace _3PA.MainFeatures.Pro.Deploy {
                 }
                 line.Append("</div>");
             }
+
+            return line.ToString();
+
+        }
+
+        public static string FormatCompilationResultForFolder(string sourceFilePath, List<FileToCompile> fileToCompile, List<FileToDeploy> listDeployedFiles)
+        {
+            var line = new StringBuilder();
+
+            line.Append("<div style='padding-bottom: 5px;'>");
+            line.Append("<img height='15px' src='SelectFile'>");
+            line.Append("<b>" + sourceFilePath.ToHtmlLink(sourceFilePath, true) + "</b>");
+            line.Append("</div>");
+            line.Append("<div style='overflow: scroll;'>");
+            foreach (FileToCompile v in fileToCompile)
+            {
+                if (listDeployedFiles == null)
+                {
+                    line.Append("<div style='padding-left: 10px;'>");
+                    line.Append("<img height='15px' src='" + Utils.GetExtensionImage((Path.GetExtension(v.SourcePath) ?? "").Replace(".", "")) + "'> " + v.BaseFileName + "</div>");
+                }
+                if (v != null && v.Errors != null)
+                {
+                    line.Append("<div style='padding-left: 10px; padding-bottom: 5px;'>");
+                    foreach (var error in v.Errors.OrderBy(error => error.Line))
+                    {
+                        line.Append(error.ToStringDescription());
+                    }
+                    line.Append("</div>");
+                }
+
+            }
+            line.Append("</div>");
+            line.Append("<div style='overflow: scroll;'>");
+            if (listDeployedFiles != null)
+            {
+                line.Append("<div>");
+                // group either by directory name or by pack name
+                var groupDirectory = listDeployedFiles.GroupBy(deploy => deploy.GroupKey).Select(deploys => deploys.ToList()).ToList();
+                foreach (var group in groupDirectory.OrderByDescending(list => list.First().DeployType).ThenBy(list => list.First().GroupKey))
+                {
+                    line.Append(group.First().ToStringGroupHeader());
+                    foreach (var fileToDeploy in group.OrderBy(deploy => deploy.To))
+                    {
+                        line.Append(fileToDeploy.ToStringDescription());
+                    }
+                }
+                line.Append("</div>");
+            }
+            line.Append("</div>");
 
             return line.ToString();
 

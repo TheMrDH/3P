@@ -19,7 +19,7 @@ namespace _3PA._Resource {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class DataResources {
@@ -66,6 +66,26 @@ namespace _3PA._Resource {
         internal static byte[] ApplicationThemes {
             get {
                 object obj = ResourceManager.GetObject("ApplicationThemes", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] BaseSnippets {
+            get {
+                object obj = ResourceManager.GetObject("BaseSnippets", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] DatabaseConnectionCheck {
+            get {
+                object obj = ResourceManager.GetObject("DatabaseConnectionCheck", resourceCulture);
                 return ((byte[])(obj));
             }
         }

@@ -49,6 +49,8 @@ namespace YamuiFramework.Controls.YamuiList {
         /// </summary>
         public virtual bool IsSeparator { get; set; }
 
+        public virtual string FullPath { get; set; }
+
         #endregion
     }
 

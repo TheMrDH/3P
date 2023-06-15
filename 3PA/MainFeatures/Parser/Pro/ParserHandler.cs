@@ -21,7 +21,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using _3PA.Lib;
 using _3PA.MainFeatures.AutoCompletionFeature;
 using _3PA.MainFeatures.CodeExplorer;
@@ -68,7 +72,6 @@ namespace _3PA.MainFeatures.Parser.Pro {
         #region Private fields
 
         private static string _lastFilePathParsed;
-
         private static Dictionary<int, ParsedLineInfo> _lineInfo = new Dictionary<int, ParsedLineInfo>();
 
         private static AsapButDelayableAction _parseAction;
@@ -120,10 +123,15 @@ namespace _3PA.MainFeatures.Parser.Pro {
                     Parse.Parser parser = null;
                     do {
                         _lastFilePathParsed = Npp.CurrentFileInfo.Path;
+                        StringBuilder hash = new StringBuilder();
+                        SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(Sci.Text)).ToList().ForEach(o => { hash.Append(o.ToString("x2")); });
+                        string hashstr = hash.ToString();
+                        if (Npp.parseResults.ContainsKey(_lastFilePathParsed))
+                        {
 
+                        }
                         if (Npp.CurrentFileInfo.IsProgress) {
                             parser = new Parse.Parser(Sci.Text, _lastFilePathParsed, null, true);
-
                             // visitor
                             var visitor = new ParserVisitor(true);
                             parser.Accept(visitor);
@@ -181,7 +189,19 @@ namespace _3PA.MainFeatures.Parser.Pro {
         private static void DoInLock(Action toDo) {
             if (Monitor.TryEnter(_lock)) {
                 try {
-                    toDo();
+                    string threadName = Npp.CurrentFileInfo.Path ;
+                    if (Npp.threads.Where(o => o.Name == threadName).Count() == 0)
+                    {
+                        Thread thread = new Thread(() => { string fname = threadName; toDo(); Npp.threads.RemoveAll(o => o.Name == fname); });
+                        thread.Name = threadName;
+                        thread.Start();
+                        Npp.threads.Add(thread);
+                    }
+                    else
+                    {
+                        Npp.threads.ForEach(o => { if (!o.IsAlive && o.Name == threadName) { /* threads.Remove(o);*/ } });
+                    }
+
                 } finally {
                     Monitor.Exit(_lock);
                 }

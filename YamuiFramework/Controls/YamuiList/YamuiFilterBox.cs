@@ -334,7 +334,6 @@ namespace YamuiFramework.Controls.YamuiList {
             /// </summary>
             public string ToolTip { get; set; }
         }
-
         #endregion
     }
 }

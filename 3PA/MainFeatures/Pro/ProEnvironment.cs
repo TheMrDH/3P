@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using System.Xml.Serialization;
 using _3PA.Lib;
 using _3PA.MainFeatures.Pro.Deploy;
@@ -213,7 +214,7 @@ namespace _3PA.MainFeatures.Pro {
                         // get full propath (from .ini + from user custom field + current file folder)
                         IniReader ini = new IniReader(IniPath);
                         var completeProPath = ini.GetValue("PROPATH", "");
-                        completeProPath = curFilePath + "," + completeProPath + "," + ExtraProPath;
+                        completeProPath = completeProPath + "," + ExtraProPath +  "," + curFilePath; //Prioritize defined propath order, allows for use of custom directories for overriding files.
 
                         var uniqueDirList = new HashSet<string>();
                         foreach (var item in completeProPath.Split(',', '\n', ';')) {

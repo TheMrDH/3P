@@ -1,22 +1,34 @@
 ﻿#region header
+
 // ========================================================================
 // Copyright (c) 2018 - Julien Caillon (julien.caillon@gmail.com)
 // This file (AppliMenu.cs) is part of 3P.
-// 
+//
 // 3P is a free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // 3P is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with 3P. If not, see <http://www.gnu.org/licenses/>.
 // ========================================================================
+
 #endregion
+
+using _3PA._Resource;
+using _3PA.Lib;
+using _3PA.MainFeatures.Appli;
+using _3PA.MainFeatures.AutoCompletionFeature;
+using _3PA.MainFeatures.ModificationsTag;
+using _3PA.MainFeatures.Parser.Pro;
+using _3PA.MainFeatures.Pro;
+using _3PA.NppCore;
+using _3PA.Tests;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -25,24 +37,15 @@ using System.Windows.Forms;
 using YamuiFramework.Controls.YamuiList;
 using YamuiFramework.Forms;
 using YamuiFramework.Helper;
-using _3PA.Lib;
-using _3PA.MainFeatures.Appli;
-using _3PA.MainFeatures.AutoCompletionFeature;
-using _3PA.MainFeatures.ModificationsTag;
-using _3PA.MainFeatures.Parser;
-using _3PA.MainFeatures.Parser.Pro;
-using _3PA.MainFeatures.Pro;
-using _3PA.NppCore;
-using _3PA.Tests;
-using _3PA._Resource;
 
-namespace _3PA.MainFeatures {
+namespace _3PA.MainFeatures
+{
     /// <summary>
     /// This class handle the Main context menu (and its children)
     /// It also has knowledge of the shortcuts for each item in the menu
     /// </summary>
-    internal class AppliMenu {
-
+    internal class AppliMenu
+    {
         #region Core
 
         private static AppliMenu _instance;
@@ -52,9 +55,11 @@ namespace _3PA.MainFeatures {
         /// <summary>
         /// Set to null to reset the instance
         /// </summary>
-        public static AppliMenu Instance {
+        public static AppliMenu Instance
+        {
             get { return _instance ?? (_instance = new AppliMenu()); }
-            set {
+            set
+            {
                 if (value == null)
                     _instance = null;
             }
@@ -68,12 +73,17 @@ namespace _3PA.MainFeatures {
         /// <summary>
         /// Closes the visible menu (if any)
         /// </summary>
-        public static bool ForceClose() {
-            if (_popup != null) {
-                try {
+        public static bool ForceClose()
+        {
+            if (_popup != null)
+            {
+                try
+                {
                     _popup.Close();
                     _popup.Dispose();
-                } catch (Exception) {
+                }
+                catch (Exception)
+                {
                     // ignored
                 }
             }
@@ -83,8 +93,10 @@ namespace _3PA.MainFeatures {
         /// <summary>
         /// Show a given menu
         /// </summary>
-        public static void ShowMenu(List<YamuiMenuItem> menuList, string menuTitle, string menuLogo, bool showAtCursor = false, int minWidth = 250) {
-            try {
+        public static void ShowMenu(List<YamuiMenuItem> menuList, string menuTitle, string menuLogo, bool showAtCursor = false, int minWidth = 250)
+        {
+            try
+            {
                 // Close any already opened menu
                 ForceClose();
 
@@ -92,7 +104,8 @@ namespace _3PA.MainFeatures {
                     menuLogo = Utils.GetNameOf(() => ImageResources.Logo16x16);
 
                 // open requested menu
-                _popup = new YamuiMenu {
+                _popup = new YamuiMenu
+                {
                     HtmlTitle = "<div class='contextMenuTitle'><img src='" + menuLogo + "' width='16' Height='16' style='padding-right: 5px; padding-top: 1px;'>" + menuTitle + "</span>",
                     SpawnLocation = Cursor.Position,
                     MenuList = menuList,
@@ -100,21 +113,29 @@ namespace _3PA.MainFeatures {
                     DisplayFilterBox = true,
                     FormMinSize = new Size(minWidth, 0)
                 };
-                if (!showAtCursor) {
+                if (!showAtCursor)
+                {
                     _popup.ParentWindowRectangle = WinApi.GetWindowRect(Npp.CurrentSci.Handle);
                 }
                 _popup.YamuiList.ShowTreeBranches = Config.Instance.ShowTreeBranches;
-                _popup.ClicItemWrapper = item => {
-                    if (item.OnClic != null) {
-                        try {
+                _popup.ClicItemWrapper = item =>
+                {
+                    if (item.OnClic != null)
+                    {
+                        try
+                        {
                             item.OnClic(item);
-                        } catch (Exception e) {
+                        }
+                        catch (Exception e)
+                        {
                             ErrorHandler.ShowErrors(e, "Error in : " + item.DisplayText);
                         }
                     }
                 };
                 _popup.Show(Npp.Win32Handle);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ErrorHandler.ShowErrors(e, "Error in ShowMenuAtCursor");
             }
         }
@@ -123,45 +144,55 @@ namespace _3PA.MainFeatures {
 
         #region Show menus
 
-        public static void ShowMainMenu(bool showAtCursor = false) {
-            ShowMenu(DisableItemIfNeeded(Instance.MainMenuList).Select(item => (YamuiMenuItem) item).ToList(), "Main menu", null, showAtCursor);
+        public static void ShowMainMenu(bool showAtCursor = false)
+        {
+            ShowMenu(DisableItemIfNeeded(Instance.MainMenuList).Select(item => (YamuiMenuItem)item).ToList(), "Main menu", null, showAtCursor);
         }
 
-        public static void ShowGenerateCodeMenu() {
-            ShowMenu(DisableItemIfNeeded(Instance._generateCodeMenuList).Select(item => (YamuiMenuItem) item).ToList(), "Generate code", "GenerateCode");
+        public static void ShowGenerateCodeMenu()
+        {
+            ShowMenu(DisableItemIfNeeded(Instance._generateCodeMenuList).Select(item => (YamuiMenuItem)item).ToList(), "Generate code", "GenerateCode");
         }
 
-        public static void ShowDatabaseToolsMenu() {
-            ShowMenu(DisableItemIfNeeded(Instance._databaseTools).Select(item => (YamuiMenuItem) item).ToList(), "Database tools", "DatabaseTools");
+        public static void ShowDatabaseToolsMenu()
+        {
+            ShowMenu(DisableItemIfNeeded(Instance._databaseTools).Select(item => (YamuiMenuItem)item).ToList(), "Database tools", "DatabaseTools");
         }
 
-        public static void ShowEnvMenu(bool showAtCursor = false) {
+        public static void ShowEnvMenu(bool showAtCursor = false)
+        {
             Instance.RebuildSwitchEnvMenu();
             ShowMenu(Instance._envMenuList.Cast<YamuiMenuItem>().ToList(), "Switch environment", "Env", showAtCursor);
         }
 
-        public static void ShowMiscMenu() {
-            ShowMenu(DisableItemIfNeeded(Instance._modificationTagMenuList).Select(item => (YamuiMenuItem) item).ToList(), "Miscellaneous", "Miscellaneous");
+        public static void ShowMiscMenu()
+        {
+            ShowMenu(DisableItemIfNeeded(Instance._modificationTagMenuList).Select(item => (YamuiMenuItem)item).ToList(), "Miscellaneous", "Miscellaneous");
         }
 
-        public static void ShowEditCodeMenu() {
-            ShowMenu(DisableItemIfNeeded(Instance._editCodeList).Select(item => (YamuiMenuItem) item).ToList(), "Edit code", "EditCode");
+        public static void ShowEditCodeMenu()
+        {
+            ShowMenu(DisableItemIfNeeded(Instance._editCodeList).Select(item => (YamuiMenuItem)item).ToList(), "Edit code", "EditCode");
         }
 
-        public static void ShowProgressToolsMenu() {
-            ShowMenu(DisableItemIfNeeded(Instance._progressTools).Select(item => (YamuiMenuItem) item).ToList(), "Progress tools", "ProgressTools");
+        public static void ShowProgressToolsMenu()
+        {
+            ShowMenu(DisableItemIfNeeded(Instance._progressTools).Select(item => (YamuiMenuItem)item).ToList(), "Progress tools", "ProgressTools");
         }
 
         /// <summary>
         /// Allows to disable the items in a list depending on the conditions (item must be generic or we must be on a progress file to Enable)
         /// </summary>
         /// <returns></returns>
-        private static List<MenuItem> DisableItemIfNeeded(List<MenuItem> list) {
+        private static List<MenuItem> DisableItemIfNeeded(List<MenuItem> list)
+        {
             var isCurrentFileProgressFile = Npp.CurrentFileInfo.IsProgress;
-            foreach (var menu in list) {
+            foreach (var menu in list)
+            {
                 menu.IsDisabled = !isCurrentFileProgressFile && !menu.Generic;
                 if (menu.Children != null)
-                    foreach (var subMenu in menu.Children.Cast<MenuItem>()) {
+                    foreach (var subMenu in menu.Children.Cast<MenuItem>())
+                    {
                         subMenu.IsDisabled = !isCurrentFileProgressFile && (!menu.Generic || !subMenu.Generic);
                     }
             }
@@ -175,7 +206,8 @@ namespace _3PA.MainFeatures {
         /// <summary>
         /// Returns a list containing all the keys used in the menu's items
         /// </summary>
-        public List<Keys> GetMenuKeysList {
+        public List<Keys> GetMenuKeysList
+        {
             get { return (from item in ShortcutableItemList where item.Shortcut.IsSet select item.Shortcut.Key).ToList(); }
         }
 
@@ -202,7 +234,8 @@ namespace _3PA.MainFeatures {
 
         #region Life and death
 
-        private AppliMenu() {
+        private AppliMenu()
+        {
             // List of item that can be assigned to a shortcut
             ShortcutableItemList = new List<MenuItem> {
                 // add the main menu here, so it can appear in the list of shortcut to set
@@ -235,6 +268,7 @@ namespace _3PA.MainFeatures {
             _generateCodeMenuList = new List<MenuItem> {
                 new MenuItem(this, "Insert new internal procedure", ImageResources.Procedure, item => ProGenerateCode.Factory.InsertCode<ParsedProcedure>(), "Insert_new_procedure", "Alt+P"),
                 new MenuItem(this, "Insert new function", ImageResources.Function, item => ProGenerateCode.Factory.InsertCode<ParsedImplementation>(), "Insert_new_function", "Alt+F"),
+                new MenuItem(this, "Insert new snippet", ImageResources.Constructor, item => ProGenerateCode.Factory.InsertCode<ParsedSnippet>(), "Insert_new_snippet", ""),
                 new MenuItem(true), // --------------------------
                 new MenuItem(this, "Delete existing internal procedure", ImageResources.DeleteProcedure, item => ProGenerateCode.Factory.DeleteCode<ParsedProcedure>(), "Delete_procedure", ""),
                 new MenuItem(this, "Delete existing function", ImageResources.DeleteFunction, item => ProGenerateCode.Factory.DeleteCode<ParsedImplementation>(), "Delete_function", ""),
@@ -282,7 +316,8 @@ namespace _3PA.MainFeatures {
 
             var goToDefItem = new MenuItem(this, "Go to definition", ImageResources.GoToDefinition, item => ProMisc.GoToDefinition(false), "Go_To_Definition", "Ctrl+B") { Generic = true };
             goToDefItem.SubText = "Middle click  /  " + goToDefItem.SubText;
-            var goToPreviousJump = new MenuItem(this, "Go to previous jump point", ImageResources.GoBackward, item => Npp.GoBackFromDefinition(), "Go_Backwards", "Ctrl+Shift+B") {
+            var goToPreviousJump = new MenuItem(this, "Go to previous jump point", ImageResources.GoBackward, item => Npp.GoBackFromDefinition(), "Go_Backwards", "Ctrl+Shift+B")
+            {
                 Generic = true
             };
             goToPreviousJump.SubText = "Ctrl + Middle click  /  " + goToPreviousJump.SubText;
@@ -336,7 +371,8 @@ namespace _3PA.MainFeatures {
 
             #region special dev
 
-            if (Config.IsDeveloper) {
+            if (Config.IsDeveloper)
+            {
                 MainMenuList.Add(
                     new MenuItem(this, "Tests", ImageResources.Tests, null, null, null, new List<MenuItem> {
                         new MenuItem(this, "DebugTest1", ImageResources.TestTube, item => PlugDebug.DebugTest1(), "DebugTest1", "Ctrl+OemQuotes") {Generic = true},
@@ -346,7 +382,8 @@ namespace _3PA.MainFeatures {
                         new MenuItem(this, "GetCurrentFileParsedDebugfile", ImageResources.TestTube, item => PlugDebug.GetCurrentFileParsedDebugfile(), "GetCurrentFileParsedDebugfile", "") {Generic = false},
                         new MenuItem(this, "Parse reference file", ImageResources.TestTube, item => PlugDebug.ParseReferenceFile(), "ParseReferenceFile", "") {Generic = true},
                         new MenuItem(this, "Parse all files", ImageResources.TestTube, item => PlugDebug.ParseAllFiles(), "ParseAllFiles", "") {Generic = true}
-                    }) {
+                    })
+                    {
                         Generic = true
                     });
             }
@@ -362,16 +399,20 @@ namespace _3PA.MainFeatures {
         /// Called when an environement is modified/add or simply switched,
         /// rebuilds the environment menu
         /// </summary>
-        public void RebuildSwitchEnvMenu() {
+        public void RebuildSwitchEnvMenu()
+        {
             _envMenuList = new List<MenuItem>();
 
-            foreach (var env in ProEnvironment.GetList) {
+            foreach (var env in ProEnvironment.GetList)
+            {
                 var name = env.Name;
                 var suffix = env.Suffix;
                 var existingItem = _envMenuList.FirstOrDefault(item => item.DisplayText.Equals(env.Name));
                 // add a new suffix item
-                if (existingItem != null) {
-                    var newSub = new YamuiMenuItem {
+                if (existingItem != null)
+                {
+                    var newSub = new YamuiMenuItem
+                    {
                         DisplayText = env.Suffix,
                         ItemImage = ImageResources.EnvSuffix,
                         OnClic = item => ProEnvironment.SetCurrent(name, suffix, null),
@@ -380,9 +421,10 @@ namespace _3PA.MainFeatures {
                     };
                     if (existingItem.Children != null)
                         existingItem.Children.Add(newSub);
-                    else {
+                    else
+                    {
                         // also add the first sub item..
-                        var firstItemSuffix = ((string) existingItem.Data) ?? "";
+                        var firstItemSuffix = ((string)existingItem.Data) ?? "";
                         existingItem.Children = new List<FilteredTypeTreeListItem> {
                             new YamuiMenuItem {
                                 DisplayText = firstItemSuffix,
@@ -395,9 +437,12 @@ namespace _3PA.MainFeatures {
                         };
                     }
                     existingItem.SubText = existingItem.Children.Count.ToString();
-                } else {
+                }
+                else
+                {
                     // add a new env item
-                    _envMenuList.Add(new MenuItem(false) {
+                    _envMenuList.Add(new MenuItem(false)
+                    {
                         DisplayText = env.Name,
                         ItemImage = ImageResources.EnvName,
                         OnClic = item => ProEnvironment.SetCurrent(name, suffix, null),
@@ -413,7 +458,8 @@ namespace _3PA.MainFeatures {
 
     #region MenuItem
 
-    internal sealed class MenuItem : YamuiMenuItem {
+    internal sealed class MenuItem : YamuiMenuItem
+    {
         /// <summary>
         /// Key of the item in the shortcut dictionnary stored in the config,
         /// must not be null if you want to be able to set a shortcut for the item
@@ -445,29 +491,34 @@ namespace _3PA.MainFeatures {
         /// </summary>
         public object Data { get; set; }
 
-        public MenuItem(AppliMenu menuToRegisterTo, string name, Image img, Action<YamuiMenuItem> action, string itemId, string defaultKey, List<MenuItem> children) {
+        public MenuItem(AppliMenu menuToRegisterTo, string name, Image img, Action<YamuiMenuItem> action, string itemId, string defaultKey, List<MenuItem> children)
+        {
             DisplayText = name;
             ItemImage = img;
 
             // children?
-            if (children != null) {
+            if (children != null)
+            {
                 ChildrenList = children;
                 Children = children.Cast<FilteredTypeTreeListItem>().ToList();
             }
 
             // shortcut?
-            if (!string.IsNullOrEmpty(itemId)) {
+            if (!string.IsNullOrEmpty(itemId))
+            {
                 ItemId = itemId;
                 ItemSpec = defaultKey;
 
-                if (Config.Instance.ShortCuts.ContainsKey(ItemId)) {
+                if (Config.Instance.ShortCuts.ContainsKey(ItemId))
+                {
                     ItemSpec = Config.Instance.ShortCuts[ItemId];
                     Config.Instance.ShortCuts.Remove(ItemId);
                 }
 
                 Config.Instance.ShortCuts.Add(ItemId, ItemSpec);
 
-                if (!string.IsNullOrEmpty(ItemSpec)) {
+                if (!string.IsNullOrEmpty(ItemSpec))
+                {
                     Shortcut = new ShortcutKey(ItemSpec);
                     SubText = ItemSpec;
                 }
@@ -485,12 +536,14 @@ namespace _3PA.MainFeatures {
         }
 
         public MenuItem(AppliMenu menuToRegisterTo, string name, Image img, Action<YamuiMenuItem> action, string itemId, string defaultKey) :
-            this(menuToRegisterTo, name, img, action, itemId, defaultKey, null) {}
+            this(menuToRegisterTo, name, img, action, itemId, defaultKey, null)
+        { }
 
         /// <summary>
         /// constructor for separators
         /// </summary>
-        public MenuItem(bool isSeparator) {
+        public MenuItem(bool isSeparator)
+        {
             IsSeparator = isSeparator;
         }
     }

@@ -396,6 +396,11 @@ namespace YamuiFramework.Controls.YamuiList {
         public event Action<YamuiScrollList, MouseEventArgs> RowMouseMove;
 
         /// <summary>
+        /// Triggered when the mouse moves on a row
+        /// </summary>
+        public event Action<object, EventArgs> RowMouseHover;
+
+        /// <summary>
         /// Triggered when the row hovered changes
         /// </summary>
         public event Action<YamuiScrollList> HotIndexChanged;
@@ -583,6 +588,7 @@ namespace YamuiFramework.Controls.YamuiList {
                     _rows[i].Enter += OnRowEnter;
                     _rows[i].Leave += OnRowLeave;
                     _rows[i].MouseMove += OnRowMouseMove;
+                    _rows[i].MouseHover += OnRowMouseHover;
                 }
 
                 _rows[i].Location = new Point(_listRectangle.Left, _listRectangle.Top + i*RowHeight);
@@ -857,6 +863,25 @@ namespace YamuiFramework.Controls.YamuiList {
         protected virtual void OnRowMouseMove(object sender, MouseEventArgs args) {
             if (RowMouseMove != null)
                 RowMouseMove(this, args);
+        }
+        protected virtual void OnRowMouseHover(object sender, EventArgs args)
+        {
+            if (args != null)
+            {
+                // can't select a disabled item
+                var rowIndex = int.Parse(((YamuiListRow)sender).Name);
+                var newItem = GetItem(rowIndex + TopIndex);
+                if (newItem != null && (newItem.IsDisabled || newItem.IsSeparator))
+                    return;
+
+                // change the selected row
+                SelectedRowIndex = rowIndex;
+
+                // make sure to  trigger the onchangeindex event
+                SelectedItemIndex = SelectedItemIndex;
+
+                RowMouseHover(sender, args);
+            }
         }
 
         protected override void OnKeyDown(KeyEventArgs e) {
